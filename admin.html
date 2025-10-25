@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Admin Dashboard - Event Check-in System</title>
+    
+    <!-- Load configuration first -->
+    <script src="config.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #5ac1ee;
+            --primary-color-hover: #4ab3d9;
+            --primary-color-light: rgba(90, 193, 238, 0.1);
+            --primary-color-dark: #3a9bc4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+        
+        .admin-container {
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-subtitle {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0 1rem;
+        }
+        
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary-color-light);
+            color: var(--primary-color);
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .content-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .back-button:hover {
+            background: var(--gray-200);
+        }
+        
+        /* Content Sections */
+        .content-section {
+            display: none !important;
+        }
+        
+        .content-section.active {
+            display: block !important;
+        }
+        
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-color-light);
+        }
+        
+        .form-input[type="color"] {
+            width: 60px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .form-checkbox input {
+            margin-right: 0.5rem;
+        }
+        
+        .form-help {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .button-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background: var(--primary-color-hover);
+            transform: translateY(-1px);
+        }
+        
+        .button-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .button-secondary:hover {
+            background: var(--gray-200);
+        }
+        
+        .button-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .button-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .button-danger {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+        
+        /* Data Source Cards */
+        .data-source-card {
+            border: 2px solid var(--gray-200);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .data-source-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(90, 193, 238, 0.15);
+        }
+        
+        .data-source-card.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-color-light);
+        }
+        
+        .data-source-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-color-light);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .data-source-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .data-source-description {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .data-source-features {
+            list-style: none;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+        
+        .data-source-features li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .data-source-features li:before {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .sidebar-overlay.open {
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                padding-top: 4rem;
+            }
+            
+            .section-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .data-source-card {
+                margin-bottom: 1rem;
+            }
+            
+            .form-input,
+            .form-select,
+            .form-textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 0.5rem;
+                padding-top: 4rem;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .content-title {
+                font-size: 1.5rem;
+            }
+            
+            .card {
+                padding: 0.75rem;
+            }
+            
+            .nav-link {
+                padding: 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+            color: var(--warning-color);
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+            ☰
+        </button>
+        
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileMenu()"></div>
+        
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-title">Admin Dashboard</h1>
+                <p class="sidebar-subtitle">Event Check-in System</p>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#overview" class="nav-link active" data-section="overview">
+                        <span class="nav-icon">📊</span>
+                        Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#event" class="nav-link" data-section="event">
+                        <span class="nav-icon">🎉</span>
+                        Event Settings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#data-source" class="nav-link" data-section="data-source">
+                        <span class="nav-icon">💾</span>
+                        Data Source
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#system" class="nav-link" data-section="system">
+                        <span class="nav-icon">🔧</span>
+                        System
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="content-title" id="contentTitle">Overview</h1>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="button button-primary" onclick="saveSettings()" style="padding: 0.5rem 1.5rem;">
+                        💾 Save All Settings
+                    </button>
+                    <a href="index.html" class="back-button">
+                        ← Back to App
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Overview Section -->
+            <div class="content-section active" id="overview">
+                <div class="section-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">📊</span>
+                            <h2 class="card-title">System Status</h2>
+                        </div>
+                        <div id="systemStatus">
+                            <p>Loading system status...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">💾</span>
+                            <h2 class="card-title">Data Source</h2>
+                        </div>
+                        <div id="dataSourceStatus">
+                            <p>Loading data source status...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">👥</span>
+                            <h2 class="card-title">Attendees</h2>
+                        </div>
+                        <div id="attendeeStats">
+                            <p>Loading attendee statistics...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">⚡</span>
+                            <h2 class="card-title">Quick Actions</h2>
+                        </div>
+                        <div class="button-group">
+                            <button class="button button-primary" onclick="refreshData()">
+                                🔄 Refresh Data
+                            </button>
+                            <button class="button button-secondary" onclick="resetCheckins()">
+                                🔄 Reset Check-ins
+                            </button>
+                            <button class="button button-warning" onclick="exportData()">
+                                📊 Export Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Event Settings Section -->
+            <div class="content-section" id="event">
+                <div class="section-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">🎉</span>
+                            <h2 class="card-title">Event Information</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventTitle">Event Title</label>
+                            <input type="text" id="eventTitle" class="form-input" placeholder="Enter event title">
+                            <div class="form-help">This will be displayed as the main heading</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventSubtitle">Event Subtitle</label>
+                            <input type="text" id="eventSubtitle" class="form-input" placeholder="Enter event subtitle">
+                            <div class="form-help">This will be displayed below the main title</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">📅</span>
+                            <h2 class="card-title">Event Details</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventDate">Event Date</label>
+                            <input type="date" id="eventDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventTime">Event Time</label>
+                            <input type="time" id="eventTime" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventLocation">Location</label>
+                            <input type="text" id="eventLocation" class="form-input" placeholder="Enter event location">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">🎨</span>
+                            <h2 class="card-title">Color Scheme</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="primaryColor">Primary Color</label>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <input type="color" id="primaryColor" class="form-input" value="#5ac1ee">
+                                <span id="colorPreview" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #5ac1ee; color: white; font-weight: 500;">
+                                    Preview
+                                </span>
+                            </div>
+                            <div class="form-help">This color will be used for buttons, highlights, and accents</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">⚙️</span>
+                            <h2 class="card-title">System Settings</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="autoRefresh">Auto Refresh Interval</label>
+                            <select id="autoRefresh" class="form-input">
+                                <option value="0">Disabled</option>
+                                <option value="5000" selected>5 seconds</option>
+                                <option value="10000">10 seconds</option>
+                                <option value="30000">30 seconds</option>
+                                <option value="60000">1 minute</option>
+                            </select>
+                            <div class="form-help">How often to check for new data</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pageSize">Page Size</label>
+                            <select id="pageSize" class="form-input">
+                                <option value="25">25</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                            </select>
+                            <div class="form-help">Number of attendees to show per page</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">👁️</span>
+                            <h2 class="card-title">Display Options</h2>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="showStats" checked>
+                            <label for="showStats">Show statistics in header</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="showSearch" checked>
+                            <label for="showSearch">Show search functionality</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="showSorting" checked>
+                            <label for="showSorting">Show sorting options</label>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">📋</span>
+                            <h2 class="card-title">Attendee Info Fields</h2>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="displayAttendeeName" checked>
+                            <label for="displayAttendeeName">Show Attendee Name</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="displayTableNumber" checked>
+                            <label for="displayTableNumber">Show Table Number</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="displayGroup" checked>
+                            <label for="displayGroup">Show Group</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="displayTicketType" checked>
+                            <label for="displayTicketType">Show Ticket Type</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Source Section -->
+            <div class="content-section" id="data-source">
+                <div class="section-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">💾</span>
+                            <h2 class="card-title">Select Data Source</h2>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="data-source-card" data-source="csv">
+                                <div class="data-source-icon">📄</div>
+                                <h3 class="data-source-title">CSV File</h3>
+                                <p class="data-source-description">Upload CSV files to server for multi-user sync</p>
+                                <ul class="data-source-features">
+                                    <li>Easy setup</li>
+                                    <li>No external dependencies</li>
+                                    <li>Automatic polling</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="data-source-card" data-source="googlesheets">
+                                <div class="data-source-icon">📊</div>
+                                <h3 class="data-source-title">Google Sheets</h3>
+                                <p class="data-source-description">Sync from published Google Sheet</p>
+                                <ul class="data-source-features">
+                                    <li>Real-time collaboration</li>
+                                    <li>Easy to update</li>
+                                    <li>Automatic sync</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="data-source-card" data-source="supabase">
+                                <div class="data-source-icon">🗄️</div>
+                                <h3 class="data-source-title">Supabase Database</h3>
+                                <p class="data-source-description">Direct database connection with real-time updates</p>
+                                <ul class="data-source-features">
+                                    <li>Real-time updates</li>
+                                    <li>Advanced features</li>
+                                    <li>Best performance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CSV Settings -->
+                    <div class="card" id="csvSettings" style="display: none;">
+                        <div class="card-header">
+                            <span class="card-icon">📄</span>
+                            <h2 class="card-title">CSV Settings</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="csvFile">Upload CSV File</label>
+                            <input type="file" id="csvFile" accept=".csv" class="form-input">
+                            <button class="button button-primary" onclick="uploadCSV()" style="margin-top: 0.5rem;">
+                                📤 Upload File
+                            </button>
+                        </div>
+                        <div id="csvStatus">
+                            <p>No file uploaded</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="csvPollInterval">Poll Interval (seconds)</label>
+                            <select id="csvPollInterval" class="form-select">
+                                <option value="1000">1 second</option>
+                                <option value="3000">3 seconds</option>
+                                <option value="5000" selected>5 seconds</option>
+                                <option value="10000">10 seconds</option>
+                                <option value="30000">30 seconds</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Google Sheets Settings -->
+                    <div class="card" id="googleSheetsSettings" style="display: none;">
+                        <div class="card-header">
+                            <span class="card-icon">📊</span>
+                            <h2 class="card-title">Google Sheets Settings</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="googleSheetsUrl">Google Sheet URL</label>
+                            <input type="url" id="googleSheetsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/...">
+                            <button class="button button-secondary" onclick="testGoogleSheets()" style="margin-top: 0.5rem;">
+                                🔍 Test Connection
+                            </button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="googleSheetsPollInterval">Poll Interval (seconds)</label>
+                            <select id="googleSheetsPollInterval" class="form-select">
+                                <option value="1000">1 second</option>
+                                <option value="3000">3 seconds</option>
+                                <option value="5000" selected>5 seconds</option>
+                                <option value="10000">10 seconds</option>
+                                <option value="30000">30 seconds</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="googleSheetsProxy">Proxy URL (optional)</label>
+                            <input type="url" id="googleSheetsProxy" class="form-input" placeholder="https://your-domain.com/gsheet">
+                            <div class="form-help">Use if direct access fails due to CORS</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Supabase Settings -->
+                    <div class="card" id="supabaseSettings" style="display: none;">
+                        <div class="card-header">
+                            <span class="card-icon">🗄️</span>
+                            <h2 class="card-title">Supabase Settings</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="supabaseUrl">Supabase Project URL</label>
+                            <input type="url" id="supabaseUrl" class="form-input" placeholder="https://your-project.supabase.co">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="supabaseKey">Supabase API Key</label>
+                            <input type="password" id="supabaseKey" class="form-input" placeholder="Your anon/public key">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="supabaseTable">Table Name</label>
+                            <input type="text" id="supabaseTable" class="form-input" placeholder="html_attendees" value="html_attendees">
+                        </div>
+                        <div class="button-group">
+                            <button class="button button-secondary" onclick="testSupabase()">
+                                🔍 Test Connection
+                            </button>
+                            <button class="button button-secondary" onclick="showSupabaseSetup()">
+                                📋 Show Setup SQL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Section -->
+            <div class="content-section" id="system">
+                <div class="section-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">📊</span>
+                            <h2 class="card-title">System Information</h2>
+                        </div>
+                        <div id="systemInfo">
+                            <p>Loading system information...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">🔐</span>
+                            <h2 class="card-title">Admin Password Protection</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Admin Password (shown in plain text)
+                            </label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <input type="text" id="adminPasswordInput" class="form-input" 
+                                       placeholder="Leave empty to disable password protection" 
+                                       style="flex: 1;">
+                                <button class="button button-primary" onclick="saveAdminPassword()">
+                                    Save Password
+                                </button>
+                            </div>
+                            <p class="form-help" id="passwordStatus">
+                                Loading password status...
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">🔧</span>
+                            <h2 class="card-title">Debugging & Maintenance</h2>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="consoleLogging" onchange="toggleConsoleLogging()">
+                                Enable Console Logging
+                            </label>
+                            <p class="form-help">Show detailed console logs for debugging. Disable in production.</p>
+                        </div>
+                        <div class="button-group" style="margin-top: 1rem;">
+                            <button class="button button-warning" onclick="clearCache()">
+                                🗑️ Clear Cache
+                            </button>
+                            <button class="button button-danger" onclick="resetSettings()">
+                                🔄 Reset Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Load external libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Load our modules -->
+    <script src="data-sources.js"></script>
+    
+    <!-- Admin Dashboard Script -->
+    <script>
+        // Initialize the admin dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAdminDashboard();
+        });
+        
+        async function initializeAdminDashboard() {
+            // Check if password is set on server
+            try {
+                const response = await fetch('csv-handler.php?action=getadminpassword');
+                const data = await response.json();
+                
+                if (!data.hasPassword) {
+                    // No password set, show dashboard directly
+                    showAdminDashboard();
+                    return;
+                }
+                
+                // Password is set, check for authentication
+                const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+                
+                if (!isAuthenticated) {
+                    showLoginForm();
+                } else {
+                    showAdminDashboard();
+                }
+            } catch (error) {
+                console.error('Error checking password status:', error);
+                // Fall back to showing dashboard if check fails
+                showAdminDashboard();
+            }
+        }
+        
+
+        
+        // Admin authentication
+        function checkAdminAuth() {
+            const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+            if (!isAuthenticated) {
+                showLoginForm();
+            } else {
+                showAdminDashboard();
+            }
+        }
+        
+        // Show login form
+        function showLoginForm() {
+            console.log('Showing login form...');
+            document.body.innerHTML = `
+                <div class="login-container">
+                    <div class="login-box">
+                        <h2>🔐 Admin Access</h2>
+                        <p>Enter admin password to access configuration</p>
+                        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                            <div class="form-group">
+                                <label for="adminPassword">Password</label>
+                                <input type="password" id="adminPassword" class="form-input" placeholder="Enter admin password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Access Admin</button>
+                        </form>
+                        <div id="loginError" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+                <style>
+                    .login-container {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    }
+                    .login-box {
+                        background: white;
+                        padding: 2rem;
+                        border-radius: 12px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                        width: 100%;
+                        max-width: 400px;
+                        text-align: center;
+                    }
+                    .login-box h2 {
+                        margin: 0 0 0.5rem 0;
+                        color: #333;
+                        font-size: 1.5rem;
+                    }
+                    .login-box p {
+                        color: #666;
+                        margin-bottom: 1.5rem;
+                    }
+                    .form-group {
+                        margin-bottom: 1rem;
+                        text-align: left;
+                    }
+                    .form-group label {
+                        display: block;
+                        margin-bottom: 0.5rem;
+                        font-weight: 600;
+                        color: #333;
+                    }
+                    .form-input {
+                        width: 100%;
+                        padding: 0.75rem;
+                        border: 2px solid #e1e5e9;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        transition: border-color 0.2s;
+                    }
+                    .form-input:focus {
+                        outline: none;
+                        border-color: #5ac1ee;
+                    }
+                    .btn {
+                        width: 100%;
+                        padding: 0.75rem;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    }
+                    .btn-primary {
+                        background: #5ac1ee;
+                        color: white;
+                    }
+                    .btn-primary:hover {
+                        background: #4ab3d9;
+                    }
+                    .error-message {
+                        color: #e74c3c;
+                        margin-top: 1rem;
+                        font-size: 0.9rem;
+                    }
+                </style>
+            `;
+        }
+        
+        // Handle admin login
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                // Get the server password
+                const response = await fetch('csv-handler.php?action=getadminpassword');
+                const data = await response.json();
+                
+                if (!data.hasPassword) {
+                    // No password set, grant access
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    location.reload();
+                    return;
+                }
+                
+                // Check password
+                if (password === data.password) {
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    location.reload();
+                } else {
+                    errorDiv.textContent = 'Invalid password. Please try again.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error authenticating. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Test authentication function (global scope)
+
+        
+        // Show admin dashboard (after authentication)
+        function showAdminDashboard() {
+            // Load current settings
+            loadCurrentSettings();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Load initial data
+            loadOverviewData();
+            
+            // Handle hash navigation
+            handleHashNavigation();
+            
+            // Set up navigation after a delay to ensure DOM is ready
+            setTimeout(() => {
+                setupNavigation();
+            }, 200);
+        }
+        
+        // Handle hash navigation on page load
+        function handleHashNavigation() {
+            const hash = window.location.hash.substring(1);
+            
+            if (hash && hash !== '') {
+                const targetSection = document.getElementById(hash);
+                const targetLink = document.querySelector(`.nav-link[data-section="${hash}"]`);
+                
+                if (targetSection && targetLink) {
+                    // Hide all sections
+                    const sections = document.querySelectorAll('.content-section');
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target section
+                    targetSection.classList.add('active');
+                    
+                    // Update active nav link
+                    const navLinks = document.querySelectorAll('.nav-link');
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    targetLink.classList.add('active');
+                    
+                    // Update content title
+                    const contentTitle = document.getElementById('contentTitle');
+                    if (contentTitle) {
+                        contentTitle.textContent = targetLink.textContent.trim();
+                    }
+                    
+                    // Load section-specific data
+                    if (hash === 'system') {
+                        loadSystemInfo();
+                        loadAdminPassword();
+                    }
+                } else {
+                    // Fall back to overview
+                    showOverviewSection();
+                }
+            } else {
+                showOverviewSection();
+            }
+        }
+        
+        // Show overview section by default
+        function showOverviewSection() {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show overview section
+            const overviewSection = document.getElementById('overview');
+            if (overviewSection) {
+                overviewSection.classList.add('active');
+            }
+            
+            // Update active nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            const overviewLink = document.querySelector('.nav-link[data-section="overview"]');
+            if (overviewLink) {
+                overviewLink.classList.add('active');
+                console.log('Overview link activated');
+            }
+            
+            // Update content title
+            const contentTitle = document.getElementById('contentTitle');
+            if (contentTitle) {
+                contentTitle.textContent = 'Overview';
+                console.log('Content title updated to Overview');
+            }
+        }
+        
+        function setupNavigation() {
+            // Use event delegation for more reliable navigation
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                // Remove any existing event listeners
+                sidebar.removeEventListener('click', handleSidebarClick);
+                
+                // Add new event listener using delegation
+                sidebar.addEventListener('click', handleSidebarClick);
+            }
+        }
+        
+        // Handle sidebar clicks using event delegation
+        function handleSidebarClick(e) {
+            // Check if clicked element is a nav link or inside one
+            const navLink = e.target.closest('.nav-link');
+            if (!navLink) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const sectionId = navLink.getAttribute('data-section');
+            
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            } else {
+                return;
+            }
+            
+            // Update active nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            navLink.classList.add('active');
+            
+            // Update content title
+            const contentTitle = document.getElementById('contentTitle');
+            if (contentTitle) {
+                contentTitle.textContent = navLink.textContent.trim();
+            }
+            
+            // Update URL
+            window.history.pushState(null, null, '#' + sectionId);
+            
+            // Load section-specific data
+            if (sectionId === 'system') {
+                loadSystemInfo();
+                loadAdminPassword();
+            }
+            
+            // Close mobile menu if open
+            closeMobileMenu();
+        }
+        
+        // Separate function for handling navigation clicks
+        function handleNavClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const link = e.currentTarget;
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            const contentTitle = document.getElementById('contentTitle');
+            
+            // Remove active class from all links and sections
+            navLinks.forEach(l => l.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            // Add active class to clicked link
+            link.classList.add('active');
+            
+            // Show corresponding section
+            const sectionId = link.getAttribute('data-section');
+            
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('active');
+                if (contentTitle) {
+                    contentTitle.textContent = link.textContent.trim();
+                }
+                
+                // Update URL
+                window.history.pushState(null, null, '#' + sectionId);
+                
+                // Load section-specific data
+                if (sectionId === 'system') {
+                    loadSystemInfo();
+                    loadAdminPassword();
+                }
+            }
+            
+            // Close mobile menu if open
+            closeMobileMenu();
+        }
+        
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+        
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        }
+        
+        function setupEventListeners() {
+            // Color picker preview
+            const colorPicker = document.getElementById('primaryColor');
+            const colorPreview = document.getElementById('colorPreview');
+            
+            if (colorPicker && colorPreview) {
+                colorPicker.addEventListener('change', (e) => {
+                    colorPreview.style.background = e.target.value;
+                });
+            }
+            
+            // Data source selection
+            const dataSourceCards = document.querySelectorAll('.data-source-card');
+            dataSourceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Remove selected class from all cards
+                    dataSourceCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selected class to clicked card
+                    card.classList.add('selected');
+                    
+                    // Show corresponding settings
+                    const sourceType = card.getAttribute('data-source');
+                    showDataSourceSettings(sourceType);
+                });
+            });
+        }
+        
+        function loadCurrentSettings() {
+            // Load configuration from server
+            fetch('csv-handler.php?action=getconfig')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        console.warn('Failed to load server configuration, using defaults');
+                        return {};
+                    }
+                })
+                .then(config => {
+                    console.log('✅ Loaded server configuration:', config);
+                    populateFormWithConfig(config);
+                })
+                .catch(error => {
+                    console.error('Error loading server configuration:', error);
+                    populateFormWithConfig({});
+                });
+        }
+        
+        function populateFormWithConfig(config) {
+            
+            // Event settings
+            document.getElementById('eventTitle').value = config.eventTitle || '';
+            document.getElementById('eventSubtitle').value = config.eventSubtitle || '';
+            document.getElementById('eventDate').value = config.eventDate || '';
+            document.getElementById('eventTime').value = config.eventTime || '';
+            document.getElementById('eventLocation').value = config.eventLocation || '';
+            document.getElementById('primaryColor').value = config.primaryColor || '#5ac1ee';
+            
+            // Data source
+            const dataSourceType = config.dataSource?.type || 'csv';
+            const dataSourceCard = document.querySelector(`[data-source="${dataSourceType}"]`);
+            if (dataSourceCard) {
+                dataSourceCard.classList.add('selected');
+                showDataSourceSettings(dataSourceType);
+            }
+            
+            // Load data source specific settings
+            if (config.dataSource?.settings) {
+                const settings = config.dataSource.settings;
+                
+                // CSV settings
+                if (settings.csv) {
+                    document.getElementById('csvPollInterval').value = settings.csv.pollInterval || 5000;
+                }
+                
+                // Google Sheets settings
+                if (settings.googlesheets) {
+                    document.getElementById('googleSheetsUrl').value = settings.googlesheets.sheetUrl || '';
+                    document.getElementById('googleSheetsPollInterval').value = settings.googlesheets.pollInterval || 5000;
+                    document.getElementById('googleSheetsProxy').value = settings.googlesheets.proxyUrl || '';
+                }
+                
+                // Supabase settings
+                if (settings.supabase) {
+                    document.getElementById('supabaseUrl').value = settings.supabase.url || '';
+                    document.getElementById('supabaseKey').value = settings.supabase.anonKey || '';
+                    document.getElementById('supabaseTable').value = settings.supabase.tableName || 'html_attendees';
+                }
+            }
+            
+            // UI settings
+            document.getElementById('showStats').checked = config.ui?.showStats !== false;
+            document.getElementById('showSearch').checked = config.ui?.showSearch !== false;
+            document.getElementById('showSorting').checked = config.ui?.showSorting !== false;
+            
+            // Display options
+            const displayOptions = config.ui?.displayOptions || {};
+            document.getElementById('displayAttendeeName').checked = displayOptions.attendeeName !== false;
+            document.getElementById('displayTableNumber').checked = displayOptions.tableNumber !== false;
+            document.getElementById('displayGroup').checked = displayOptions.group !== false;
+            document.getElementById('displayTicketType').checked = displayOptions.ticketType !== false;
+            
+            // System settings
+            document.getElementById('autoRefresh').value = config.defaults?.autoRefresh || 5000;
+            document.getElementById('pageSize').value = config.defaults?.pageSize || 50;
+            
+            // Console logging setting
+            const consoleLoggingCheckbox = document.getElementById('consoleLogging');
+            if (consoleLoggingCheckbox) {
+                consoleLoggingCheckbox.checked = config.defaults?.consoleLogging || false;
+            }
+        }
+        
+        function showDataSourceSettings(sourceType) {
+            // Hide all settings
+            document.getElementById('csvSettings').style.display = 'none';
+            document.getElementById('googleSheetsSettings').style.display = 'none';
+            document.getElementById('supabaseSettings').style.display = 'none';
+            
+            // Show relevant settings
+            switch (sourceType) {
+                case 'csv':
+                    document.getElementById('csvSettings').style.display = 'block';
+                    checkCSVStatus();
+                    break;
+                case 'googlesheets':
+                    document.getElementById('googleSheetsSettings').style.display = 'block';
+                    break;
+                case 'supabase':
+                    document.getElementById('supabaseSettings').style.display = 'block';
+                    break;
+            }
+        }
+        
+        function loadOverviewData() {
+            // Load system status
+            loadSystemStatus();
+            
+            // Load data source status
+            loadDataSourceStatus();
+            
+            // Load attendee statistics
+            loadAttendeeStats();
+        }
+        
+        // Load system information for System tab
+        function loadSystemInfo() {
+            console.log('loadSystemInfo called');
+            const systemInfoDiv = document.getElementById('systemInfo');
+            if (!systemInfoDiv) {
+                console.error('systemInfo div not found');
+                return;
+            }
+            
+            const config = window.EventCheckinConfig || {};
+            const browser = navigator.userAgent;
+            const now = new Date();
+            
+            systemInfoDiv.innerHTML = `
+                <div style="display: grid; gap: 1rem;">
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.5rem;">Application</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                            <div><strong>Version:</strong> v${config.version || '1.0.0'}</div>
+                            <div><strong>Build Date:</strong> ${config.buildDate || 'Unknown'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.5rem;">Environment</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                            <div><strong>Current Time:</strong> ${now.toLocaleString()}</div>
+                            <div><strong>Timezone:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}</div>
+                            <div><strong>Language:</strong> ${navigator.language}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.5rem;">Browser</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                            <div><strong>User Agent:</strong> ${browser.substring(0, 60)}...</div>
+                            <div><strong>Platform:</strong> ${navigator.platform}</div>
+                            <div><strong>Cookies Enabled:</strong> ${navigator.cookieEnabled ? 'Yes' : 'No'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.5rem;">Storage</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                            <div><strong>LocalStorage:</strong> ${typeof(Storage) !== 'undefined' ? 'Available' : 'Not supported'}</div>
+                            <div><strong>SessionStorage:</strong> ${typeof(sessionStorage) !== 'undefined' ? 'Available' : 'Not supported'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load admin password status
+        async function loadAdminPassword() {
+            const passwordInput = document.getElementById('adminPasswordInput');
+            const statusDiv = document.getElementById('passwordStatus');
+            
+            try {
+                const response = await fetch('csv-handler.php?action=getadminpassword');
+                const data = await response.json();
+                
+                if (data.hasPassword) {
+                    passwordInput.value = data.password;
+                    statusDiv.textContent = 'Password protection is enabled. Admin access requires this password.';
+                    statusDiv.style.color = 'var(--success-color, #10b981)';
+                } else {
+                    passwordInput.value = '';
+                    statusDiv.textContent = 'No password set. Admin page is open to everyone.';
+                    statusDiv.style.color = 'var(--warning-color, #f59e0b)';
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Error loading password status: ' + error.message;
+                statusDiv.style.color = 'var(--error-color, #ef4444)';
+            }
+        }
+        
+        // Save admin password
+        async function saveAdminPassword() {
+            const passwordInput = document.getElementById('adminPasswordInput');
+            const statusDiv = document.getElementById('passwordStatus');
+            const password = passwordInput.value.trim();
+            
+            try {
+                const response = await fetch('csv-handler.php?action=setadminpassword', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (password === '') {
+                        statusDiv.textContent = 'Password protection disabled successfully.';
+                        statusDiv.style.color = 'var(--success-color, #10b981)';
+                        // Clear session so user stays logged in
+                        sessionStorage.removeItem('adminAuthenticated');
+                    } else {
+                        statusDiv.textContent = 'Password saved successfully. Admin access now requires this password.';
+                        statusDiv.style.color = 'var(--success-color, #10b981)';
+                        // Set session so user stays logged in
+                        sessionStorage.setItem('adminAuthenticated', 'true');
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to save password');
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Error saving password: ' + error.message;
+                statusDiv.style.color = 'var(--error-color, #ef4444)';
+            }
+        }
+        
+        async function loadSystemStatus() {
+            const statusDiv = document.getElementById('systemStatus');
+            try {
+                // Check if CSV handler is accessible
+                const response = await fetch('csv-handler.php?action=status');
+                if (response.ok) {
+                    const status = await response.json();
+                    statusDiv.innerHTML = `
+                        <div class="status-indicator status-success">✅ System Online</div>
+                        <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                            CSV handler is working correctly
+                        </p>
+                    `;
+                } else {
+                    throw new Error('CSV handler not accessible');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status-indicator status-error">❌ System Error</div>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                        ${error.message}
+                    </p>
+                `;
+            }
+        }
+        
+        async function loadDataSourceStatus() {
+            const statusDiv = document.getElementById('dataSourceStatus');
+            const config = window.EventCheckinConfig || {};
+            const dataSourceType = config.dataSource?.type || 'csv';
+            const settings = config.dataSource?.settings?.[dataSourceType] || {};
+            
+            let detailsHtml = '';
+            
+            if (dataSourceType === 'csv') {
+                detailsHtml = `
+                    <div style="margin-top: 0.75rem; padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.75rem;">
+                        <div><strong>Type:</strong> CSV File Upload</div>
+                        <div><strong>Poll Interval:</strong> ${(settings.pollInterval || 5000) / 1000} seconds</div>
+                        <div><strong>Status:</strong> ${settings.pollUrl ? 'Ready' : 'Not configured'}</div>
+                    </div>
+                `;
+            } else if (dataSourceType === 'googlesheets') {
+                detailsHtml = `
+                    <div style="margin-top: 0.75rem; padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.75rem;">
+                        <div><strong>Type:</strong> Google Sheets</div>
+                        <div><strong>URL:</strong> ${settings.sheetUrl ? settings.sheetUrl.substring(0, 50) + '...' : 'Not set'}</div>
+                        <div><strong>Poll Interval:</strong> ${(settings.pollInterval || 5000) / 1000} seconds</div>
+                    </div>
+                `;
+            } else if (dataSourceType === 'supabase') {
+                detailsHtml = `
+                    <div style="margin-top: 0.75rem; padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.75rem;">
+                        <div><strong>Type:</strong> Supabase Database</div>
+                        <div><strong>URL:</strong> ${settings.url ? settings.url : 'Not set'}</div>
+                        <div><strong>Table:</strong> ${settings.tableName || 'html_attendees'}</div>
+                        <div><strong>Real-time:</strong> Enabled</div>
+                    </div>
+                `;
+            }
+            
+            statusDiv.innerHTML = `
+                <div class="status-indicator status-success">✅ ${dataSourceType.toUpperCase()}</div>
+                ${detailsHtml}
+            `;
+        }
+        
+        async function loadAttendeeStats() {
+            const statsDiv = document.getElementById('attendeeStats');
+            try {
+                // Fetch both attendee data and check-in status
+                const [dataResponse, checkinResponse] = await Promise.all([
+                    fetch('csv-handler.php?action=get'),
+                    fetch('csv-handler.php?action=getcheckins')
+                ]);
+                
+                if (dataResponse.ok) {
+                    const data = await dataResponse.json();
+                    const total = data.length;
+                    
+                    // Load check-in status if available
+                    let checkedIn = 0;
+                    if (checkinResponse.ok) {
+                        const checkinData = await checkinResponse.json();
+                        checkedIn = Object.values(checkinData).filter(c => c.status === 'checked-in').length;
+                    } else {
+                        // Fallback: count checked-in status in data
+                        checkedIn = data.filter(a => a.status === 'checked-in').length;
+                    }
+                    
+                    const pending = total - checkedIn;
+                    
+                    statsDiv.innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900);">${total}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Total</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">${checkedIn}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Checked In</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color);">${pending}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Pending</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 1rem; text-align: center; font-size: 0.75rem; color: var(--gray-500);">
+                            Last updated: ${new Date().toLocaleTimeString()}
+                        </p>
+                    `;
+                } else {
+                    throw new Error('Unable to load attendee data');
+                }
+            } catch (error) {
+                statsDiv.innerHTML = `
+                    <div class="status-indicator status-error">❌ Error</div>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                        ${error.message}
+                    </p>
+                `;
+            }
+        }
+        
+        async function checkCSVStatus() {
+            const statusDiv = document.getElementById('csvStatus');
+            try {
+                const response = await fetch('csv-handler.php?action=status');
+                if (response.ok) {
+                    const status = await response.json();
+                    if (status.has_data && status.metadata) {
+                        statusDiv.innerHTML = `
+                            <div class="status-indicator status-success">✅ File Uploaded</div>
+                            <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                                <strong>File:</strong> ${status.metadata.file_name}<br>
+                                <strong>Attendees:</strong> ${status.metadata.attendee_count}<br>
+                                <strong>Uploaded:</strong> ${status.metadata.uploaded_at}
+                            </p>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div class="status-indicator status-warning">⚠️ No File</div>
+                            <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                                No CSV file uploaded yet
+                            </p>
+                        `;
+                    }
+                } else {
+                    throw new Error('Unable to check CSV status');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status-indicator status-error">❌ Error</div>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                        ${error.message}
+                    </p>
+                `;
+            }
+        }
+        
+        // Action functions
+        async function uploadCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file first');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('csvFile', file);
+            
+            try {
+                const response = await fetch('csv-handler.php?action=upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`File uploaded successfully! ${result.attendee_count} attendees loaded.`);
+                    checkCSVStatus();
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        }
+        
+        async function testGoogleSheets() {
+            const url = document.getElementById('googleSheetsUrl').value;
+            if (!url) {
+                alert('Please enter a Google Sheets URL');
+                return;
+            }
+            
+            try {
+                // Create a temporary GoogleSheetsDataSource instance to test
+                class GoogleSheetsTestSource {
+                    constructor(url) {
+                        this.sheetUrl = url;
+                    }
+                    
+                    buildGoogleSheetCsvUrl(sheetUrl) {
+                        try {
+                            const url = new URL(sheetUrl);
+                            if (url.searchParams.get('output') === 'csv' || url.pathname.includes('/export')) {
+                                return sheetUrl;
+                            }
+                            const pathSegments = url.pathname.split('/').filter(Boolean);
+                            const spreadsheetIndex = pathSegments.indexOf('spreadsheets');
+                            if (spreadsheetIndex !== -1 && pathSegments[spreadsheetIndex + 1] === 'd') {
+                                const sheetId = pathSegments[spreadsheetIndex + 2];
+                                let gid = url.searchParams.get('gid') || '0';
+                                return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+                            }
+                            return sheetUrl;
+                        } catch (error) {
+                            return sheetUrl;
+                        }
+                    }
+                }
+                
+                const testSource = new GoogleSheetsTestSource(url);
+                const csvUrl = testSource.buildGoogleSheetCsvUrl(url);
+                
+                const response = await fetch(csvUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const csvText = await response.text();
+                const lines = csvText.split('\n').filter(line => line.trim());
+                const dataRows = lines.length > 1 ? lines.length - 1 : 0;
+                
+                alert(`✅ Connection successful! Found ${dataRows} attendees.`);
+            } catch (error) {
+                alert('❌ Connection failed: ' + error.message);
+            }
+        }
+        
+        async function testSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            const table = document.getElementById('supabaseTable').value;
+            
+            if (!url || !key) {
+                alert('Please enter both Supabase URL and API key');
+                return;
+            }
+            
+            try {
+                const supabase = window.supabase.createClient(url, key);
+                const { data, error } = await supabase
+                    .from(table)
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                alert('Supabase connection successful!');
+            } catch (error) {
+                alert('Supabase connection failed: ' + error.message);
+            }
+        }
+        
+        function showSupabaseSetup() {
+            const sqlCode = 'CREATE TABLE html_attendees (\n' +
+                  '    id SERIAL PRIMARY KEY,\n' +
+                  '    table_number TEXT,\n' +
+                  '    group_name TEXT,\n' +
+                  '    attendee_name TEXT,\n' +
+                  '    ticket_type TEXT,\n' +
+                  '    status TEXT DEFAULT \'pending\',\n' +
+                  '    checked_in_at TIMESTAMPTZ,\n' +
+                  '    row_index INTEGER,\n' +
+                  '    created_at TIMESTAMPTZ DEFAULT NOW(),\n' +
+                  '    updated_at TIMESTAMPTZ DEFAULT NOW()\n' +
+                  ');\n\n' +
+                  'CREATE INDEX idx_html_attendees_name ON html_attendees(attendee_name);\n' +
+                  'CREATE INDEX idx_html_attendees_status ON html_attendees(status);\n\n' +
+                  'ALTER TABLE html_attendees ENABLE ROW LEVEL SECURITY;\n\n' +
+                  'CREATE POLICY "Allow all operations on html_attendees" ON html_attendees\n' +
+                  'FOR ALL USING (true);';
+            
+            // Create modal HTML
+            const modal = document.createElement('div');
+            modal.id = 'sqlModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 12px;
+                    padding: 30px;
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                ">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Supabase SQL Setup</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Copy and paste this SQL into your Supabase SQL Editor:</p>
+                    <div style="
+                        background: #1e1e1e;
+                        color: #d4d4d4;
+                        padding: 20px;
+                        border-radius: 8px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        overflow-x: auto;
+                        user-select: text;
+                        cursor: text;
+                        white-space: pre;
+                        margin-bottom: 20px;
+                    ">${sqlCode}</div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="copySqlCode()" style="
+                            padding: 10px 20px;
+                            background: var(--primary-color);
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">📋 Copy SQL</button>
+                        <button onclick="document.getElementById('sqlModal').remove()" style="
+                            padding: 10px 20px;
+                            background: #e0e0e0;
+                            color: #333;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Click outside to close
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+            // Store SQL code globally for copy function
+            window._sqlCodeToCopy = sqlCode;
+        }
+        
+        function copySqlCode() {
+            navigator.clipboard.writeText(window._sqlCodeToCopy).then(function() {
+                // Show success feedback
+                const copyBtn = event.target;
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.style.background = '#4caf50';
+                setTimeout(function() {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+            }, function(err) {
+                alert('Failed to copy to clipboard: ' + err);
+            });
+        }
+        
+        function saveSettings() {
+            const newConfig = {
+                eventTitle: document.getElementById('eventTitle').value,
+                eventSubtitle: document.getElementById('eventSubtitle').value,
+                eventDate: document.getElementById('eventDate').value,
+                eventTime: document.getElementById('eventTime').value,
+                eventLocation: document.getElementById('eventLocation').value,
+                primaryColor: document.getElementById('primaryColor').value,
+                dataSource: {
+                    type: document.querySelector('.data-source-card.selected')?.getAttribute('data-source') || 'csv',
+                    settings: {
+                        csv: {
+                            pollInterval: parseInt(document.getElementById('csvPollInterval').value)
+                        },
+                        googlesheets: {
+                            sheetUrl: document.getElementById('googleSheetsUrl').value,
+                            pollInterval: parseInt(document.getElementById('googleSheetsPollInterval').value),
+                            proxyUrl: document.getElementById('googleSheetsProxy').value
+                        },
+                        supabase: {
+                            url: document.getElementById('supabaseUrl').value,
+                            anonKey: document.getElementById('supabaseKey').value,
+                            tableName: document.getElementById('supabaseTable').value
+                        }
+                    }
+                },
+                ui: {
+                    showStats: document.getElementById('showStats').checked,
+                    showSearch: document.getElementById('showSearch').checked,
+                    showSorting: document.getElementById('showSorting').checked,
+                    displayOptions: {
+                        attendeeName: document.getElementById('displayAttendeeName').checked,
+                        tableNumber: document.getElementById('displayTableNumber').checked,
+                        group: document.getElementById('displayGroup').checked,
+                        ticketType: document.getElementById('displayTicketType').checked
+                    }
+                },
+                defaults: {
+                    autoRefresh: parseInt(document.getElementById('autoRefresh').value),
+                    pageSize: parseInt(document.getElementById('pageSize').value),
+                    consoleLogging: document.getElementById('consoleLogging').checked
+                }
+            };
+            
+            // Save to server
+            fetch('csv-handler.php?action=saveconfig', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Token': 'admin123' // In production, use proper authentication
+                },
+                body: JSON.stringify(newConfig)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(error => {
+                        throw new Error(error.error || 'Failed to save configuration');
+                    });
+                }
+            })
+            .then(result => {
+                console.log('✅ Configuration saved to server:', result);
+                
+                // Show success message with details
+                const eventDetails = [];
+                if (newConfig.eventDate) eventDetails.push(`Date: ${new Date(newConfig.eventDate).toLocaleDateString()}`);
+                if (newConfig.eventTime) eventDetails.push(`Time: ${newConfig.eventTime}`);
+                if (newConfig.eventLocation) eventDetails.push(`Location: ${newConfig.eventLocation}`);
+                
+                let message = 'Settings saved successfully! All users will now use these settings.';
+                if (eventDetails.length > 0) {
+                    message += '\n\nEvent Details:\n' + eventDetails.join('\n');
+                }
+                
+                alert(message);
+            })
+            .catch(error => {
+                console.error('Error saving configuration:', error);
+                alert('Error saving configuration: ' + error.message);
+            });
+        }
+        
+        // Console logging toggle
+        function toggleConsoleLogging() {
+            const enabled = document.getElementById('consoleLogging').checked;
+            // Store in EventCheckinConfig immediately
+            if (window.EventCheckinConfig) {
+                window.EventCheckinConfig.defaults.consoleLogging = enabled;
+            }
+            
+            // Show user feedback
+            const status = enabled ? 'enabled' : 'disabled';
+            console.log(`Console logging ${status}. Save settings to apply permanently.`);
+        }
+        
+        // Quick action functions
+        function refreshData() {
+            // Trigger a manual refresh of the main app's data
+            fetch('csv-handler.php?action=get')
+                .then(response => response.json())
+                .then(data => {
+                    alert('✅ Data refreshed. The main app will update on the next poll cycle.');
+                })
+                .catch(error => {
+                    alert('❌ Error refreshing data: ' + error.message);
+                });
+        }
+        
+        function resetCheckins() {
+            if (confirm('Reset all check-ins? This will mark every attendee as pending.')) {
+                // Clear server-side check-in data
+                fetch('csv-handler.php?action=clearcheckins', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': 'admin123'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Reload attendee stats without refreshing the page
+                        loadAttendeeStats();
+                        alert('✅ All check-ins have been reset! All devices will update within 5 seconds.');
+                    } else {
+                        throw new Error('Failed to reset check-ins');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error resetting check-ins:', error);
+                    alert('❌ Error resetting check-ins: ' + error.message);
+                });
+            }
+        }
+        
+        function exportData() {
+            // Export check-in data as CSV with attendee names
+            Promise.all([
+                fetch('csv-handler.php?action=getcheckins'),
+                fetch('csv-handler.php?action=get')
+            ])
+                .then(([checkinResponse, dataResponse]) => {
+                    return Promise.all([checkinResponse.json(), dataResponse.json()]);
+                })
+                .then(([checkinData, attendeeData]) => {
+                    // Create a map of attendee IDs to names
+                    const attendeeMap = {};
+                    attendeeData.forEach(attendee => {
+                        attendeeMap[attendee.id] = attendee.attendeeName || attendee.full_name || 'Unknown';
+                    });
+                    
+                    // Convert to CSV format with attendee names
+                    let csv = 'Attendee ID,Attendee Name,Status,Checked In At\n';
+                    for (const [id, info] of Object.entries(checkinData)) {
+                        const name = attendeeMap[id] || 'Unknown';
+                        csv += `"${id}","${name}","${info.status}","${info.checkedInAt || ''}"\n`;
+                    }
+                    
+                    // Download file
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `checkins_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    // Show success message after download starts
+                    setTimeout(() => {
+                        alert(`✅ Check-in data exported successfully!`);
+                    }, 500);
+                })
+                .catch(error => {
+                    alert('❌ Error exporting data: ' + error.message);
+                });
+        }
+        
+        function clearCache() {
+            if (confirm('Clear browser cache? This will reset your local settings to defaults.')) {
+                localStorage.removeItem('eventCheckinConfig');
+                sessionStorage.clear();
+                alert('✅ Cache cleared. Page will reload with default settings.');
+                window.location.reload();
+            }
+        }
+        
+        function resetSettings() {
+            if (confirm('Reset all settings to defaults? This will clear the server configuration and cannot be undone.')) {
+                // Clear server-side config
+                const defaultConfig = {
+                    eventTitle: 'Event Check-in',
+                    eventSubtitle: 'Event Check-in System',
+                    eventDate: '',
+                    eventTime: '',
+                    eventLocation: '',
+                    primaryColor: '#5ac1ee',
+                    dataSource: {
+                        type: 'csv',
+                        settings: {
+                            csv: { pollUrl: 'csv-handler.php?action=get', pollInterval: 5000 },
+                            googlesheets: { sheetUrl: '', pollInterval: 5000, proxyUrl: '', fallbackMethods: ['direct', 'proxy', 'manual'] },
+                            supabase: { url: '', anonKey: '', tableName: 'html_attendees' }
+                        }
+                    },
+                    ui: { showStats: true, showSearch: true, showSorting: true },
+                    defaults: { autoRefresh: 5000, pageSize: 50, consoleLogging: false }
+                };
+                
+                fetch('csv-handler.php?action=saveconfig', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': 'admin123'
+                    },
+                    body: JSON.stringify(defaultConfig)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    localStorage.removeItem('eventCheckinConfig');
+                    alert('✅ Settings reset to defaults. Page will reload.');
+                    window.location.reload();
+                })
+                .catch(error => {
+                    alert('❌ Error resetting settings: ' + error.message);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
