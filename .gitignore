@@ -1,0 +1,25 @@
+# Data files
+data/*.json
+data/*.txt
+data/*.csv
+data/*.xlsx
+
+# Keep data directory but ignore contents
+!data/.gitkeep
+
+# macOS
+.DS_Store
+._*
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
