@@ -233,6 +233,7 @@ basic_html/
 ## License
 
 This application is provided as-is for event management purposes. Feel free to modify and distribute according to your needs.
+If you need assistance in deploying for your organization, reach out to troy@serendipitytech.net
 
 ---
 
