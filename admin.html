@@ -8,8 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>Admin Dashboard - Event Check-in System</title>
     
+    <!-- Load Supabase library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Load configuration first -->
     <script src="config.js"></script>
+
+    <!-- Load Supabase Auth module -->
+    <script src="supabase-auth.js"></script>
     
     <style>
         :root {
@@ -996,29 +1002,34 @@
         });
         
         async function initializeAdminDashboard() {
-            // Check if password is set on server
             try {
-                const response = await fetch('csv-handler.php?action=getadminpassword');
-                const data = await response.json();
-                
-                if (!data.hasPassword) {
-                    // No password set, show dashboard directly
-                    showAdminDashboard();
+                // Initialize Supabase Auth
+                const initialized = await window.SupabaseAuth.init();
+
+                if (!initialized) {
+                    // Supabase not configured, show configuration required screen
+                    showSupabaseConfigRequired();
                     return;
                 }
-                
-                // Password is set, check for authentication
-                const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
-                
+
+                // Check if user is authenticated
+                const isAuthenticated = await window.SupabaseAuth.isAuthenticated();
+
                 if (!isAuthenticated) {
-                    showLoginForm();
+                    // Check if admin account exists
+                    const { exists } = await window.SupabaseAuth.checkAdminExists();
+
+                    if (exists) {
+                        showLoginForm(false); // Show login form
+                    } else {
+                        showLoginForm(true); // Show signup form for first-time setup
+                    }
                 } else {
                     showAdminDashboard();
                 }
             } catch (error) {
-                console.error('Error checking password status:', error);
-                // Fall back to showing dashboard if check fails
-                showAdminDashboard();
+                console.error('Error checking authentication:', error);
+                showLoginForm(false);
             }
         }
         
@@ -1034,22 +1045,40 @@
             }
         }
         
-        // Show login form
-        function showLoginForm() {
-            console.log('Showing login form...');
+        // Show login/signup form
+        function showLoginForm(isSignup = false) {
+            console.log(isSignup ? 'Showing signup form...' : 'Showing login form...');
+            const storedEmail = window.SupabaseAuth.getStoredEmail();
+
             document.body.innerHTML = `
                 <div class="login-container">
                     <div class="login-box">
-                        <h2>🔐 Admin Access</h2>
-                        <p>Enter admin password to access configuration</p>
-                        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                        <h2>🔐 Admin ${isSignup ? 'Setup' : 'Access'}</h2>
+                        <p>${isSignup ? 'Create admin account to secure your dashboard' : 'Enter credentials to access configuration'}</p>
+                        <form id="adminLoginForm" onsubmit="handleAdminLogin(event, ${isSignup})">
+                            <div class="form-group">
+                                <label for="adminEmail">Email</label>
+                                <input type="email" id="adminEmail" class="form-input" placeholder="admin@example.com" value="${storedEmail}" required>
+                            </div>
                             <div class="form-group">
                                 <label for="adminPassword">Password</label>
-                                <input type="password" id="adminPassword" class="form-input" placeholder="Enter admin password" required>
+                                <input type="password" id="adminPassword" class="form-input" placeholder="At least 8 characters" required minlength="8">
                             </div>
-                            <button type="submit" class="btn btn-primary">Access Admin</button>
+                            ${isSignup ? `
+                            <div class="form-group">
+                                <label for="adminPasswordConfirm">Confirm Password</label>
+                                <input type="password" id="adminPasswordConfirm" class="form-input" placeholder="Confirm password" required minlength="8">
+                            </div>
+                            ` : ''}
+                            <button type="submit" class="btn btn-primary">${isSignup ? 'Create Admin Account' : 'Sign In'}</button>
                         </form>
+                        ${!isSignup ? `
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <button onclick="handlePasswordReset()" class="btn-link">Forgot Password?</button>
+                        </div>
+                        ` : ''}
                         <div id="loginError" class="error-message" style="display: none;"></div>
+                        <div id="loginSuccess" class="success-message" style="display: none;"></div>
                     </div>
                 </div>
                 <style>
@@ -1123,42 +1152,226 @@
                         margin-top: 1rem;
                         font-size: 0.9rem;
                     }
+                    .success-message {
+                        color: #10b981;
+                        margin-top: 1rem;
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                    }
+                    .btn-link {
+                        background: none;
+                        border: none;
+                        color: var(--primary-color);
+                        text-decoration: underline;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        padding: 0;
+                    }
+                    .btn-link:hover {
+                        color: var(--primary-color-hover);
+                    }
                 </style>
             `;
         }
         
-        // Handle admin login
-        async function handleAdminLogin(event) {
+        // Handle admin login/signup
+        async function handleAdminLogin(event, isSignup = false) {
             event.preventDefault();
+
+            const email = document.getElementById('adminEmail').value;
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('loginError');
-            
+            const successDiv = document.getElementById('loginSuccess');
+
+            // Clear previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
             try {
-                // Get the server password
-                const response = await fetch('csv-handler.php?action=getadminpassword');
-                const data = await response.json();
-                
-                if (!data.hasPassword) {
-                    // No password set, grant access
-                    sessionStorage.setItem('adminAuthenticated', 'true');
-                    location.reload();
-                    return;
-                }
-                
-                // Check password
-                if (password === data.password) {
-                    sessionStorage.setItem('adminAuthenticated', 'true');
-                    location.reload();
+                if (isSignup) {
+                    // Validate password confirmation
+                    const passwordConfirm = document.getElementById('adminPasswordConfirm').value;
+
+                    if (password !== passwordConfirm) {
+                        errorDiv.textContent = 'Passwords do not match.';
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+
+                    // Sign up new admin
+                    const result = await window.SupabaseAuth.signUp(email, password);
+
+                    if (!result.success) {
+                        errorDiv.textContent = result.error;
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+
+                    // Show success message
+                    successDiv.textContent = 'Admin account created! Redirecting to dashboard...';
+                    successDiv.style.display = 'block';
+
+                    // Redirect to dashboard after 2 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+
                 } else {
-                    errorDiv.textContent = 'Invalid password. Please try again.';
-                    errorDiv.style.display = 'block';
+                    // Sign in
+                    const result = await window.SupabaseAuth.signIn(email, password);
+
+                    if (!result.success) {
+                        errorDiv.textContent = result.error || 'Invalid credentials.';
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+
+                    // Redirect to dashboard
+                    location.reload();
                 }
+
             } catch (error) {
+                console.error('Authentication error:', error);
                 errorDiv.textContent = 'Error authenticating. Please try again.';
                 errorDiv.style.display = 'block';
             }
         }
+
+        // Handle password reset
+        async function handlePasswordReset() {
+            const email = document.getElementById('adminEmail').value;
+            const errorDiv = document.getElementById('loginError');
+            const successDiv = document.getElementById('loginSuccess');
+
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email address.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            try {
+                const result = await window.SupabaseAuth.resetPassword(email);
+
+                if (!result.success) {
+                    errorDiv.textContent = result.error;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                successDiv.textContent = 'Password reset email sent! Check your inbox.';
+                successDiv.style.display = 'block';
+
+            } catch (error) {
+                errorDiv.textContent = 'Error sending reset email. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
         
+        // Show Supabase configuration required screen
+        function showSupabaseConfigRequired() {
+            document.body.innerHTML = `
+                <div class="login-container">
+                    <div class="login-box">
+                        <h2>⚠️ Supabase Configuration Required</h2>
+                        <p>Supabase Auth is not configured. Please set up your Supabase project to enable secure authentication.</p>
+
+                        <div style="text-align: left; margin: 1.5rem 0; padding: 1rem; background: var(--gray-100); border-radius: 8px;">
+                            <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Setup Steps:</h3>
+                            <ol style="margin-left: 1.25rem; line-height: 1.8;">
+                                <li>Create a free Supabase project at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></li>
+                                <li>Copy your project URL and anon key</li>
+                                <li>Configure Supabase settings in config.js or use the temporary bypass below</li>
+                            </ol>
+                        </div>
+
+                        <button onclick="bypassAuthForSetup()" class="btn btn-warning" style="width: 100%; margin-bottom: 0.5rem;">
+                            ⚠️ Temporary Bypass (Insecure - Setup Only)
+                        </button>
+
+                        <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 1rem;">
+                            Note: Using temporary bypass allows anyone to access admin settings. Configure Supabase as soon as possible.
+                        </p>
+                    </div>
+                </div>
+                <style>
+                    .login-container {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    }
+                    .login-box {
+                        background: white;
+                        padding: 2rem;
+                        border-radius: 12px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                        width: 100%;
+                        max-width: 500px;
+                    }
+                    .login-box h2 {
+                        margin: 0 0 0.5rem 0;
+                        color: #333;
+                        font-size: 1.5rem;
+                    }
+                    .login-box p {
+                        color: #666;
+                        margin-bottom: 1rem;
+                    }
+                    .btn {
+                        padding: 0.75rem;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    }
+                    .btn-warning {
+                        background: var(--warning-color);
+                        color: white;
+                    }
+                    .btn-warning:hover {
+                        background: #ea8c00;
+                    }
+                    a {
+                        color: var(--primary-color);
+                        text-decoration: none;
+                    }
+                    a:hover {
+                        text-decoration: underline;
+                    }
+                </style>
+            `;
+        }
+
+        // Temporary bypass for initial setup (INSECURE - only for setup)
+        function bypassAuthForSetup() {
+            if (confirm('WARNING: This bypasses authentication and is INSECURE. Only use this to configure Supabase settings. Continue?')) {
+                console.warn('🚨 Authentication bypassed - Configure Supabase immediately!');
+                showAdminDashboard();
+            }
+        }
+
+        // Logout function for admin dashboard
+        async function handleLogout() {
+            if (!confirm('Are you sure you want to log out?')) {
+                return;
+            }
+
+            try {
+                await window.SupabaseAuth.signOut();
+                location.reload();
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Error logging out. Please try again.');
+            }
+        }
+
         // Test authentication function (global scope)
 
         
