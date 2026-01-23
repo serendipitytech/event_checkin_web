@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Tests</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 10px;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252526;
+            border-radius: 5px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        #output {
+            background: #252526;
+            padding: 20px;
+            border-radius: 5px;
+            min-height: 400px;
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d2d30;
+            border-left: 4px solid #4ec9b0;
+            border-radius: 3px;
+        }
+        .pass { color: #4ec9b0; }
+        .fail { color: #f48771; }
+        .info { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <h1>Email Validation Test Suite</h1>
+
+    <div class="controls">
+        <button onclick="runTests()">Run Tests</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <div class="summary" id="summary" style="display: none;">
+        <h3>Test Summary</h3>
+        <div id="summaryContent"></div>
+    </div>
+
+    <div id="output">Click "Run Tests" to start the test suite...</div>
+
+    <!-- Load the implementation first -->
+    <script src="email-validation.js"></script>
+
+    <!-- Load the tests -->
+    <script src="email-validation.test.js"></script>
+
+    <script>
+        const outputDiv = document.getElementById('output');
+        const summaryDiv = document.getElementById('summary');
+        const summaryContent = document.getElementById('summaryContent');
+
+        // Override console methods to capture output
+        const originalLog = console.log;
+        const originalError = console.error;
+        let outputBuffer = [];
+
+        console.log = function(...args) {
+            const message = args.join(' ');
+            outputBuffer.push(message);
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            const message = args.join(' ');
+            outputBuffer.push(message);
+            originalError.apply(console, args);
+        };
+
+        function runTests() {
+            // Clear previous output
+            outputBuffer = [];
+            outputDiv.textContent = 'Running tests...\n\n';
+            summaryDiv.style.display = 'none';
+
+            // Small delay to show "Running tests..." message
+            setTimeout(() => {
+                try {
+                    const summary = window.runEmailValidationTests();
+
+                    // Display output
+                    outputDiv.innerHTML = formatOutput(outputBuffer.join('\n'));
+
+                    // Display summary
+                    const passRate = Math.round((summary.passed / summary.total) * 100);
+                    const summaryClass = summary.failed === 0 ? 'pass' : 'fail';
+
+                    summaryContent.innerHTML = `
+                        <div class="${summaryClass}">
+                            <strong>Results:</strong> ${summary.passed}/${summary.total} tests passed (${passRate}%)
+                        </div>
+                        ${summary.failed > 0 ? `<div class="fail">Failed: ${summary.failed}</div>` : ''}
+                    `;
+                    summaryDiv.style.display = 'block';
+
+                } catch (error) {
+                    outputDiv.innerHTML = `<span class="fail">Error running tests: ${error.message}</span>\n${error.stack}`;
+                    console.error('Test runner error:', error);
+                }
+            }, 100);
+        }
+
+        function formatOutput(text) {
+            return text
+                .replace(/✓/g, '<span class="pass">✓</span>')
+                .replace(/✗/g, '<span class="fail">✗</span>')
+                .replace(/=+/g, '<span class="info">$&</span>')
+                .replace(/Test Results:/g, '<span class="info">Test Results:</span>');
+        }
+
+        function clearOutput() {
+            outputBuffer = [];
+            outputDiv.textContent = 'Output cleared. Click "Run Tests" to start.';
+            summaryDiv.style.display = 'none';
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>

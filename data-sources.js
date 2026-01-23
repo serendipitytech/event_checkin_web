@@ -272,6 +272,7 @@ class CSVDataSource extends BaseDataSource {
             groupName: attendee.groupName || '',
             attendeeName: attendee.attendeeName || '',
             ticketType: attendee.ticketType || '',
+            email: attendee.email || '',
             status: attendee.status || 'pending',
             checkedInAt: attendee.checkedInAt || null,
             rowIndex: attendee.rowIndex || index + 2
@@ -454,16 +455,29 @@ class GoogleSheetsDataSource extends BaseDataSource {
             const groupName = (row[1] || '').toString().trim() || '';
             const fullName = (row[2] || '').toString().trim() || '';
             const ticketType = (row[3] || '').toString().trim() || '';
-            
+            const email = (row[4] || '').toString().trim() || '';
+
+            // Validate and sanitize email if provided
+            let validatedEmail = '';
+            if (email && window.EmailValidator) {
+                const result = window.EmailValidator.validate(email);
+                if (result.valid) {
+                    validatedEmail = result.sanitized;
+                } else {
+                    console.warn(`Invalid email for ${fullName}: ${email} - ${result.error}`);
+                }
+            }
+
             // Generate ID from full name or use index
             const id = fullName ? `gsheet_${fullName.replace(/\s+/g, '_').toLowerCase()}_${index}` : `gsheet_${index}`;
-            
+
             return {
                 id: id,
                 tableNumber: tableNumber,
                 groupName: groupName || ticketType || 'General',
                 attendeeName: fullName,
                 ticketType: ticketType,
+                email: validatedEmail,
                 status: 'pending',
                 checkedInAt: null,
                 rowIndex: index + 2
@@ -607,6 +621,7 @@ class SupabaseDataSource extends BaseDataSource {
             groupName: (row.group_name || '').toString().trim(),
             attendeeName: (row.attendee_name || '').toString().trim(),
             ticketType: (row.ticket_type || '').toString().trim(),
+            email: (row.email || '').toString().trim(),
             status: row.status || 'pending',
             checkedInAt: row.checked_in_at,
             rowIndex: row.row_index

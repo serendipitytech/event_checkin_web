@@ -253,6 +253,20 @@
             white-space: nowrap;
         }
 
+        .attendee-email {
+            font-size: 12px;
+            color: #4e4e4e;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .attendee-email::before {
+            content: '📧';
+            font-size: 11px;
+        }
+
         .check-button {
             padding: 12px 20px;
             border: none;
@@ -942,6 +956,7 @@
     
     <!-- Load our modules -->
     <script src="config.js"></script>
+    <script src="email-validation.js"></script>
     <script src="data-sources.js"></script>
     
     <!-- Main application script -->
@@ -1665,54 +1680,78 @@
             localStorage.setItem(COMPACT_STATS_STORAGE_KEY, compactStatsCollapsed.toString());
         }
         
+        // Helper function to escape HTML and prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            const div = document.createElement('div');
+            div.textContent = unsafe;
+            return div.innerHTML;
+        }
+
         function renderAttendees() {
             const container = document.getElementById('attendeeList');
-            
+
             if (filteredAttendees.length === 0) {
                 const message = currentTab === 'pending' ? 'No pending attendees' : 'No checked-in attendees';
+                const filterMsg = currentFilter ? 'Try adjusting your search terms' : 'All attendees are checked in!';
                 container.innerHTML = `
                     <div class="empty-state">
-                        <h3>${message}</h3>
-                        <p>${currentFilter ? 'Try adjusting your search terms' : 'All attendees are checked in!'}</p>
+                        <h3>${escapeHtml(message)}</h3>
+                        <p>${escapeHtml(filterMsg)}</p>
                     </div>
                 `;
                 return;
             }
-            
+
             // Get display options from config
             const displayOptions = (window.EventCheckinConfig?.ui?.displayOptions || {});
             const showName = displayOptions.attendeeName !== false;
             const showTable = displayOptions.tableNumber !== false;
             const showGroup = displayOptions.group !== false;
             const showTicket = displayOptions.ticketType !== false;
-            
+            const showEmail = displayOptions.email !== false;
+
             container.innerHTML = filteredAttendees.map(attendee => {
+                // Escape all user-controlled data to prevent XSS
+                const safeGroupName = escapeHtml(attendee.groupName || 'General');
+                const safeTableNumber = escapeHtml(attendee.tableNumber);
+                const safeAttendeeName = escapeHtml(attendee.attendeeName);
+                const safeTicketType = escapeHtml(attendee.ticketType);
+                const safeId = escapeHtml(attendee.id);
+
                 // Build top row (group and table)
                 const topRowElements = [];
                 if (showGroup && attendee.groupName) {
-                    topRowElements.push(`<span class="attendee-group-name">${attendee.groupName || 'General'}</span>`);
+                    topRowElements.push(`<span class="attendee-group-name">${safeGroupName}</span>`);
                 }
                 if (showTable && attendee.tableNumber) {
-                    topRowElements.push(`<span>${topRowElements.length > 0 ? ' • ' : ''}${attendee.tableNumber}</span>`);
+                    topRowElements.push(`<span>${topRowElements.length > 0 ? ' • ' : ''}${safeTableNumber}</span>`);
                 }
-                
+
                 // Build bottom row (name and ticket type)
                 const bottomRowElements = [];
                 if (showName && attendee.attendeeName) {
-                    bottomRowElements.push(`<span class="attendee-name">${attendee.attendeeName}</span>`);
+                    bottomRowElements.push(`<span class="attendee-name">${safeAttendeeName}</span>`);
                 }
                 if (showTicket && attendee.ticketType) {
-                    bottomRowElements.push(`<span class="attendee-ticket">${attendee.ticketType}</span>`);
+                    bottomRowElements.push(`<span class="attendee-ticket">${safeTicketType}</span>`);
                 }
-                
+
+                // Format email for safe display (uses EmailValidator.formatForDisplay which also escapes HTML)
+                const emailDisplay = attendee.email && window.EmailValidator ?
+                    window.EmailValidator.formatForDisplay(attendee.email) : '';
+
+                // Note: Using data attributes instead of onclick would be more secure
+                // but would require refactoring event handling
                 return `
                 <div class="attendee-item ${attendee.status === 'checked-in' ? 'checked-in' : ''}">
                         <div class="attendee-info">
                             ${topRowElements.length > 0 ? `<div class="attendee-top-row">${topRowElements.join('')}</div>` : ''}
                             ${bottomRowElements.length > 0 ? `<div class="attendee-bottom-row">${bottomRowElements.join('')}</div>` : ''}
+                            ${showEmail && emailDisplay ? `<div class="attendee-email">${emailDisplay}</div>` : ''}
                         </div>
                     <button class="check-button ${attendee.status === 'checked-in' ? 'checked-in' : 'check-in'} ${attendee.status === 'checked-in' ? 'undo' : ''}"
-                            onclick="toggleAttendeeStatus('${attendee.id}')">
+                            onclick="toggleAttendeeStatus('${safeId}')">
                         ${attendee.status === 'checked-in' ? 'Undo' : 'Check In'}
                     </button>
                     </div>
