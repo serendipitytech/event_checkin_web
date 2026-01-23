@@ -1760,11 +1760,17 @@
         }
 
         function toggleAttendeeStatus(attendeeId) {
-            const attendee = attendees.find(a => a.id === attendeeId);
-            if (!attendee) return;
-            
+            // Convert ID to number since it's passed as string from onclick attribute
+            const numericId = parseInt(attendeeId, 10);
+            const attendee = attendees.find(a => a.id === numericId);
+
+            if (!attendee) {
+                console.error('Attendee not found:', numericId);
+                return;
+            }
+
             const newStatus = attendee.status === 'checked-in' ? 'pending' : 'checked-in';
-            updateAttendeeStatus(attendeeId, newStatus);
+            updateAttendeeStatus(numericId, newStatus);
         }
 
         // File handling
