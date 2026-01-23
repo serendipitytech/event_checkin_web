@@ -21,7 +21,7 @@ window.EventCheckinConfig = {
     
     // Data Source Configuration
     dataSource: {
-        type: "csv", // "csv", "googlesheets", "supabase"
+        type: "supabase", // "csv", "googlesheets", "supabase"
         settings: {
             // CSV settings
             csv: {
@@ -38,18 +38,18 @@ window.EventCheckinConfig = {
             },
             // Supabase settings
             supabase: {
-                url: "",
-                anonKey: "",
-                tableName: "html_attendees"
+                url: "https://mwgusnjwqkznzohmxugu.supabase.co",
+                anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z3Vzbmp3cWt6bnpvaG14dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODI5NTAsImV4cCI6MjA4NDc1ODk1MH0.QUYuqMLcBEmWabyi_RnZdZo4yfqkR_9k_4HCbHJyxj8",
+                tableName: "event_checkin_attendees"
             }
         }
     },
     
     // Database Configuration (legacy support)
     database: {
-        url: "",
-        anonKey: "",
-        tableName: "html_attendees"
+        url: "https://mwgusnjwqkznzohmxugu.supabase.co",
+        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z3Vzbmp3cWt6bnpvaG14dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODI5NTAsImV4cCI6MjA4NDc1ODk1MH0.QUYuqMLcBEmWabyi_RnZdZo4yfqkR_9k_4HCbHJyxj8",
+        tableName: "event_checkin_attendees"
     },
     
     // UI Configuration
@@ -132,16 +132,15 @@ window.loadConfig = function() {
     
     // Load environment-specific settings
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        // Development settings
-        window.EventCheckinConfig.dataSource.settings.supabase.url = 'https://efcgzxjwystresjbcezc.supabase.co';
-        window.EventCheckinConfig.dataSource.settings.supabase.anonKey = 'YOUR_DEV_API_KEY_HERE';
+        // Development settings - use the same Supabase instance
+        // No override needed, using config above
         const devProxyUrl = 'http://localhost:8080/gsheet';
         window.EventCheckinConfig.dataSource.settings.googlesheets.proxyUrl = devProxyUrl;
         window.EventCheckinConfig.googleSheets.proxyUrl = devProxyUrl;
     } else {
         // Production settings - these should be set by the hosting environment
-        window.EventCheckinConfig.dataSource.settings.supabase.url = window.ENV_SUPABASE_URL || '';
-        window.EventCheckinConfig.dataSource.settings.supabase.anonKey = window.ENV_SUPABASE_ANON_KEY || '';
+        window.EventCheckinConfig.dataSource.settings.supabase.url = window.ENV_SUPABASE_URL || window.EventCheckinConfig.dataSource.settings.supabase.url;
+        window.EventCheckinConfig.dataSource.settings.supabase.anonKey = window.ENV_SUPABASE_ANON_KEY || window.EventCheckinConfig.dataSource.settings.supabase.anonKey;
         const prodProxyUrl = window.ENV_PROXY_URL || '';
         window.EventCheckinConfig.dataSource.settings.googlesheets.proxyUrl = prodProxyUrl;
         window.EventCheckinConfig.googleSheets.proxyUrl = prodProxyUrl;

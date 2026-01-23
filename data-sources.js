@@ -24,7 +24,7 @@ window.DataSourceManager = {
             config.settings = {
                 csv: { pollUrl: 'csv-handler.php?action=get', pollInterval: 5000 },
                 googlesheets: { sheetUrl: '', pollInterval: 5000, proxyUrl: '' },
-                supabase: { url: '', anonKey: '', tableName: 'html_attendees' }
+                supabase: { url: '', anonKey: '', tableName: 'event_checkin_attendees' }
             };
         }
         
@@ -38,7 +38,7 @@ window.DataSourceManager = {
                 this.currentSource = new GoogleSheetsDataSource(config.settings.googlesheets || { sheetUrl: '', pollInterval: 5000, proxyUrl: '' });
                 break;
             case 'supabase':
-                this.currentSource = new SupabaseDataSource(config.settings.supabase || { url: '', anonKey: '', tableName: 'html_attendees' });
+                this.currentSource = new SupabaseDataSource(config.settings.supabase || { url: '', anonKey: '', tableName: 'event_checkin_attendees' });
                 break;
             default:
                 console.error('Unknown data source type:', sourceType);
@@ -492,8 +492,9 @@ class SupabaseDataSource extends BaseDataSource {
         super(settings);
         this.supabase = null;
         this.realtimeSubscription = null;
-        
+
         if (settings.url && settings.anonKey) {
+            // Create Supabase client (uses public schema by default)
             this.supabase = window.supabase.createClient(settings.url, settings.anonKey);
         }
     }

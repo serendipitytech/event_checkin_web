@@ -911,7 +911,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="supabaseTable">Table Name</label>
-                            <input type="text" id="supabaseTable" class="form-input" placeholder="html_attendees" value="html_attendees">
+                            <input type="text" id="supabaseTable" class="form-input" placeholder="event_checkin_attendees" value="event_checkin_attendees">
                         </div>
                         <div class="button-group">
                             <button class="button button-secondary" onclick="testSupabase()">
@@ -1623,14 +1623,33 @@
         }
         
         function loadCurrentSettings() {
-            // Load configuration from server
+            // Load configuration from localStorage first, then try server
+            try {
+                const localConfig = localStorage.getItem('eventCheckinConfig');
+                if (localConfig) {
+                    const config = JSON.parse(localConfig);
+                    console.log('✅ Loaded configuration from localStorage');
+                    populateFormWithConfig(config);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Failed to load config from localStorage:', e);
+            }
+
+            // Try to load from server (only works with HTTP server running)
+            if (window.location.protocol === 'file:') {
+                console.warn('⚠️ File protocol detected. Using default configuration. Run a local server for full functionality.');
+                populateFormWithConfig(window.EventCheckinConfig || {});
+                return;
+            }
+
             fetch('csv-handler.php?action=getconfig')
                 .then(response => {
                     if (response.ok) {
                         return response.json();
                     } else {
                         console.warn('Failed to load server configuration, using defaults');
-                        return {};
+                        return window.EventCheckinConfig || {};
                     }
                 })
                 .then(config => {
@@ -1639,19 +1658,29 @@
                 })
                 .catch(error => {
                     console.error('Error loading server configuration:', error);
-                    populateFormWithConfig({});
+                    populateFormWithConfig(window.EventCheckinConfig || {});
                 });
         }
         
         function populateFormWithConfig(config) {
-            
+            // Helper function to safely set element value
+            const safeSetValue = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            };
+
+            const safeSetChecked = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = value;
+            };
+
             // Event settings
-            document.getElementById('eventTitle').value = config.eventTitle || '';
-            document.getElementById('eventSubtitle').value = config.eventSubtitle || '';
-            document.getElementById('eventDate').value = config.eventDate || '';
-            document.getElementById('eventTime').value = config.eventTime || '';
-            document.getElementById('eventLocation').value = config.eventLocation || '';
-            document.getElementById('primaryColor').value = config.primaryColor || '#5ac1ee';
+            safeSetValue('eventTitle', config.eventTitle || '');
+            safeSetValue('eventSubtitle', config.eventSubtitle || '');
+            safeSetValue('eventDate', config.eventDate || '');
+            safeSetValue('eventTime', config.eventTime || '');
+            safeSetValue('eventLocation', config.eventLocation || '');
+            safeSetValue('primaryColor', config.primaryColor || '#5ac1ee');
             
             // Data source
             const dataSourceType = config.dataSource?.type || 'csv';
@@ -1664,80 +1693,101 @@
             // Load data source specific settings
             if (config.dataSource?.settings) {
                 const settings = config.dataSource.settings;
-                
+
                 // CSV settings
                 if (settings.csv) {
-                    document.getElementById('csvPollInterval').value = settings.csv.pollInterval || 5000;
+                    safeSetValue('csvPollInterval', settings.csv.pollInterval || 5000);
                 }
-                
+
                 // Google Sheets settings
                 if (settings.googlesheets) {
-                    document.getElementById('googleSheetsUrl').value = settings.googlesheets.sheetUrl || '';
-                    document.getElementById('googleSheetsPollInterval').value = settings.googlesheets.pollInterval || 5000;
-                    document.getElementById('googleSheetsProxy').value = settings.googlesheets.proxyUrl || '';
+                    safeSetValue('googleSheetsUrl', settings.googlesheets.sheetUrl || '');
+                    safeSetValue('googleSheetsPollInterval', settings.googlesheets.pollInterval || 5000);
+                    safeSetValue('googleSheetsProxy', settings.googlesheets.proxyUrl || '');
                 }
-                
+
                 // Supabase settings
                 if (settings.supabase) {
-                    document.getElementById('supabaseUrl').value = settings.supabase.url || '';
-                    document.getElementById('supabaseKey').value = settings.supabase.anonKey || '';
-                    document.getElementById('supabaseTable').value = settings.supabase.tableName || 'html_attendees';
+                    safeSetValue('supabaseUrl', settings.supabase.url || '');
+                    safeSetValue('supabaseKey', settings.supabase.anonKey || '');
+                    safeSetValue('supabaseTable', settings.supabase.tableName || 'event_checkin_attendees');
                 }
             }
-            
+
             // UI settings
-            document.getElementById('showStats').checked = config.ui?.showStats !== false;
-            document.getElementById('showSearch').checked = config.ui?.showSearch !== false;
-            document.getElementById('showSorting').checked = config.ui?.showSorting !== false;
-            
+            safeSetChecked('showStats', config.ui?.showStats !== false);
+            safeSetChecked('showSearch', config.ui?.showSearch !== false);
+            safeSetChecked('showSorting', config.ui?.showSorting !== false);
+
             // Display options
             const displayOptions = config.ui?.displayOptions || {};
-            document.getElementById('displayAttendeeName').checked = displayOptions.attendeeName !== false;
-            document.getElementById('displayTableNumber').checked = displayOptions.tableNumber !== false;
-            document.getElementById('displayGroup').checked = displayOptions.group !== false;
-            document.getElementById('displayTicketType').checked = displayOptions.ticketType !== false;
-            
+            safeSetChecked('displayAttendeeName', displayOptions.attendeeName !== false);
+            safeSetChecked('displayTableNumber', displayOptions.tableNumber !== false);
+            safeSetChecked('displayGroup', displayOptions.group !== false);
+            safeSetChecked('displayTicketType', displayOptions.ticketType !== false);
+
             // System settings
-            document.getElementById('autoRefresh').value = config.defaults?.autoRefresh || 5000;
-            document.getElementById('pageSize').value = config.defaults?.pageSize || 50;
-            
+            safeSetValue('autoRefresh', config.defaults?.autoRefresh || 5000);
+            safeSetValue('pageSize', config.defaults?.pageSize || 50);
+
             // Console logging setting
-            const consoleLoggingCheckbox = document.getElementById('consoleLogging');
-            if (consoleLoggingCheckbox) {
-                consoleLoggingCheckbox.checked = config.defaults?.consoleLogging || false;
-            }
+            safeSetChecked('consoleLogging', config.defaults?.consoleLogging || false);
         }
         
         function showDataSourceSettings(sourceType) {
+            // Helper to safely hide/show elements
+            const safeSetDisplay = (id, display) => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = display;
+            };
+
             // Hide all settings
-            document.getElementById('csvSettings').style.display = 'none';
-            document.getElementById('googleSheetsSettings').style.display = 'none';
-            document.getElementById('supabaseSettings').style.display = 'none';
-            
+            safeSetDisplay('csvSettings', 'none');
+            safeSetDisplay('googleSheetsSettings', 'none');
+            safeSetDisplay('supabaseSettings', 'none');
+
             // Show relevant settings
             switch (sourceType) {
                 case 'csv':
-                    document.getElementById('csvSettings').style.display = 'block';
-                    checkCSVStatus();
+                    safeSetDisplay('csvSettings', 'block');
+                    if (typeof checkCSVStatus === 'function') checkCSVStatus();
                     break;
                 case 'googlesheets':
-                    document.getElementById('googleSheetsSettings').style.display = 'block';
+                    safeSetDisplay('googleSheetsSettings', 'block');
                     break;
                 case 'supabase':
-                    document.getElementById('supabaseSettings').style.display = 'block';
+                    safeSetDisplay('supabaseSettings', 'block');
                     break;
             }
         }
         
         function loadOverviewData() {
+            // Skip loading server data if using file:// protocol
+            if (window.location.protocol === 'file:') {
+                console.warn('⚠️ File protocol detected. Dashboard data loading skipped. Run a local server for full functionality.');
+                return;
+            }
+
             // Load system status
-            loadSystemStatus();
-            
+            try {
+                loadSystemStatus();
+            } catch (e) {
+                console.error('Error loading system status:', e);
+            }
+
             // Load data source status
-            loadDataSourceStatus();
-            
+            try {
+                loadDataSourceStatus();
+            } catch (e) {
+                console.error('Error loading data source status:', e);
+            }
+
             // Load attendee statistics
-            loadAttendeeStats();
+            try {
+                loadAttendeeStats();
+            } catch (e) {
+                console.error('Error loading attendee stats:', e);
+            }
         }
         
         // Load system information for System tab
@@ -1909,7 +1959,7 @@
                     <div style="margin-top: 0.75rem; padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.75rem;">
                         <div><strong>Type:</strong> Supabase Database</div>
                         <div><strong>URL:</strong> ${settings.url ? settings.url : 'Not set'}</div>
-                        <div><strong>Table:</strong> ${settings.tableName || 'html_attendees'}</div>
+                        <div><strong>Table:</strong> ${settings.tableName || 'event_checkin_attendees'}</div>
                         <div><strong>Real-time:</strong> Enabled</div>
                     </div>
                 `;
@@ -2445,7 +2495,7 @@
                         settings: {
                             csv: { pollUrl: 'csv-handler.php?action=get', pollInterval: 5000 },
                             googlesheets: { sheetUrl: '', pollInterval: 5000, proxyUrl: '', fallbackMethods: ['direct', 'proxy', 'manual'] },
-                            supabase: { url: '', anonKey: '', tableName: 'html_attendees' }
+                            supabase: { url: '', anonKey: '', tableName: 'event_checkin_attendees' }
                         }
                     },
                     ui: { showStats: true, showSearch: true, showSorting: true },

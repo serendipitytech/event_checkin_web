@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - Event Check-in</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f3f4f6;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        button {
+            background: #5ac1ee;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4ab3d9;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .links {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .links a {
+            color: #5ac1ee;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Cache</h1>
+        <p>
+            Click the button below to clear your browser's localStorage cache for this app.
+            This will reset all saved configuration and force the app to load fresh settings.
+        </p>
+
+        <button onclick="clearCache()">Clear Cache & Reload</button>
+
+        <div class="success" id="success">
+            ✅ Cache cleared! Redirecting...
+        </div>
+
+        <div class="links">
+            <a href="admin.html">Admin Dashboard</a>
+            <a href="index.html">Check-in App</a>
+        </div>
+    </div>
+
+    <script>
+        function clearCache() {
+            try {
+                // Clear all localStorage
+                localStorage.clear();
+
+                // Show success message
+                document.getElementById('success').style.display = 'block';
+
+                // Redirect to admin after 1 second
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 1000);
+            } catch (error) {
+                alert('Error clearing cache: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
