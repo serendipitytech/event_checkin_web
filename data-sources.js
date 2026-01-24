@@ -273,6 +273,7 @@ class CSVDataSource extends BaseDataSource {
             attendeeName: attendee.attendeeName || '',
             ticketType: attendee.ticketType || '',
             email: attendee.email || '',
+            additionalInfo: attendee.additionalInfo || attendee.mealChoice || '',
             status: attendee.status || 'pending',
             checkedInAt: attendee.checkedInAt || null,
             rowIndex: attendee.rowIndex || index + 2
@@ -450,12 +451,13 @@ class GoogleSheetsDataSource extends BaseDataSource {
     
     normalizeAttendeeData(data) {
         return data.map((row, index) => {
-            // Parse row data: table_number, group_name, full_name, ticket_type, email
+            // Parse row data: table_number, group_name, full_name, ticket_type, email, additional_info
             const tableNumber = (row[0] || '').toString().trim() || 'General';
             const groupName = (row[1] || '').toString().trim() || '';
             const fullName = (row[2] || '').toString().trim() || '';
             const ticketType = (row[3] || '').toString().trim() || '';
             const email = (row[4] || '').toString().trim() || '';
+            const additionalInfo = (row[5] || '').toString().trim() || '';
 
             // Validate and sanitize email if provided
             let validatedEmail = '';
@@ -478,6 +480,7 @@ class GoogleSheetsDataSource extends BaseDataSource {
                 attendeeName: fullName,
                 ticketType: ticketType,
                 email: validatedEmail,
+                additionalInfo: additionalInfo,
                 status: 'pending',
                 checkedInAt: null,
                 rowIndex: index + 2
@@ -623,6 +626,7 @@ class SupabaseDataSource extends BaseDataSource {
             attendeeName: (row.attendee_name || '').toString().trim(),
             ticketType: (row.ticket_type || '').toString().trim(),
             email: (row.email || '').toString().trim(),
+            additionalInfo: (row.additional_info || row.meal_choice || '').toString().trim(),
             status: row.status || 'pending',
             checkedInAt: row.checked_in_at,
             rowIndex: row.row_index
