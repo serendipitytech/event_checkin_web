@@ -2404,45 +2404,48 @@
                     consoleLogging: document.getElementById('consoleLogging').checked
                 }
             };
-            
-            // Save to server
-            fetch('csv-handler.php?action=saveconfig', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Token': 'admin123' // In production, use proper authentication
-                },
-                body: JSON.stringify(newConfig)
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return response.json().then(error => {
-                        throw new Error(error.error || 'Failed to save configuration');
-                    });
-                }
-            })
-            .then(result => {
-                console.log('✅ Configuration saved to server:', result);
-                
-                // Show success message with details
-                const eventDetails = [];
-                if (newConfig.eventDate) eventDetails.push(`Date: ${new Date(newConfig.eventDate).toLocaleDateString()}`);
-                if (newConfig.eventTime) eventDetails.push(`Time: ${newConfig.eventTime}`);
-                if (newConfig.eventLocation) eventDetails.push(`Location: ${newConfig.eventLocation}`);
-                
-                let message = 'Settings saved successfully! All users will now use these settings.';
-                if (eventDetails.length > 0) {
-                    message += '\n\nEvent Details:\n' + eventDetails.join('\n');
-                }
-                
-                alert(message);
-            })
-            .catch(error => {
-                console.error('Error saving configuration:', error);
-                alert('Error saving configuration: ' + error.message);
-            });
+
+            // Save to localStorage first (most important)
+            window.saveConfig(newConfig);
+            console.log('✅ Configuration saved to localStorage');
+
+            // Show success message
+            const eventDetails = [];
+            if (newConfig.eventDate) eventDetails.push(`Date: ${new Date(newConfig.eventDate).toLocaleDateString()}`);
+            if (newConfig.eventTime) eventDetails.push(`Time: ${newConfig.eventTime}`);
+            if (newConfig.eventLocation) eventDetails.push(`Location: ${newConfig.eventLocation}`);
+
+            let message = 'Settings saved successfully! Changes will apply immediately.';
+            if (eventDetails.length > 0) {
+                message += '\n\nEvent Details:\n' + eventDetails.join('\n');
+            }
+
+            alert(message);
+
+            // Optionally save to server if using CSV data source
+            if (newConfig.dataSource?.type === 'csv') {
+                fetch('csv-handler.php?action=saveconfig', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': 'admin123'
+                    },
+                    body: JSON.stringify(newConfig)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Server save failed');
+                    }
+                })
+                .then(result => {
+                    console.log('✅ Configuration also saved to server:', result);
+                })
+                .catch(error => {
+                    console.warn('Note: Could not save to server (using localStorage only):', error.message);
+                });
+            }
         }
         
         // Console logging toggle
