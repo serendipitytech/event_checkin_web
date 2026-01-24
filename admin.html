@@ -766,8 +766,12 @@
                             <input type="checkbox" id="showSorting" checked>
                             <label for="showSorting">Show sorting options</label>
                         </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="showCheckinConfirmation">
+                            <label for="showCheckinConfirmation">Show confirmation after check-in</label>
+                        </div>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-header">
                             <span class="card-icon">📋</span>
@@ -1718,6 +1722,7 @@
             safeSetChecked('showStats', config.ui?.showStats !== false);
             safeSetChecked('showSearch', config.ui?.showSearch !== false);
             safeSetChecked('showSorting', config.ui?.showSorting !== false);
+            safeSetChecked('showCheckinConfirmation', config.ui?.showCheckinConfirmation === true);
 
             // Display options
             const displayOptions = config.ui?.displayOptions || {};
@@ -2385,6 +2390,7 @@
                     showStats: document.getElementById('showStats').checked,
                     showSearch: document.getElementById('showSearch').checked,
                     showSorting: document.getElementById('showSorting').checked,
+                    showCheckinConfirmation: document.getElementById('showCheckinConfirmation').checked,
                     displayOptions: {
                         attendeeName: document.getElementById('displayAttendeeName').checked,
                         tableNumber: document.getElementById('displayTableNumber').checked,

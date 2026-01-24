@@ -218,15 +218,13 @@
         }
 
         .attendee-top-row {
-            font-size: 14px;
-            color: #4e4e4e;
             margin-bottom: 6px;
-            font-weight: 600;
         }
 
-        .attendee-group-name {
+        .attendee-name {
+            font-size: 17px;
             font-weight: 700;
-            color: #000000;
+            color: #0b0c0f;
         }
 
         .attendee-bottom-row {
@@ -234,12 +232,12 @@
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+            font-size: 14px;
+            color: #4e4e4e;
         }
 
-        .attendee-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #0b0c0f;
+        .attendee-group-name {
+            color: #4e4e4e;
         }
 
         .attendee-ticket {
@@ -713,6 +711,148 @@
             display: block;
             opacity: 1;
             pointer-events: auto;
+        }
+
+        /* Check-in Confirmation Modal */
+        .checkin-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .checkin-modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .checkin-modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .checkin-modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .checkin-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0b0c0f;
+            margin: 0 0 8px 0;
+        }
+
+        .checkin-modal-subtitle {
+            font-size: 14px;
+            color: #4e4e4e;
+            margin: 0;
+        }
+
+        .checkin-modal-info {
+            background: rgba(90, 193, 238, 0.1);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .checkin-modal-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0b0c0f;
+            margin: 0 0 12px 0;
+        }
+
+        .checkin-modal-detail {
+            font-size: 15px;
+            color: #4e4e4e;
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkin-modal-detail-label {
+            font-weight: 600;
+            color: #0b0c0f;
+        }
+
+        .checkin-modal-reminder {
+            background: #fff9e6;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .checkin-modal-reminder-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #000000;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .checkin-modal-reminder-text {
+            font-size: 13px;
+            color: #4e4e4e;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .checkin-modal-button {
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--primary-color);
+            color: #050505;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .checkin-modal-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkin-modal-button:active {
+            transform: translateY(0);
         }
 
         /* Tablet and Mobile Styles */
@@ -1719,27 +1859,23 @@
                 const safeTicketType = escapeHtml(attendee.ticketType);
                 const safeId = escapeHtml(attendee.id);
 
-                // Build top row (group and table)
+                // Build top row (name)
                 const topRowElements = [];
-                if (showGroup && attendee.groupName) {
-                    topRowElements.push(`<span class="attendee-group-name">${safeGroupName}</span>`);
-                }
-                if (showTable && attendee.tableNumber) {
-                    topRowElements.push(`<span>${topRowElements.length > 0 ? ' • ' : ''}${safeTableNumber}</span>`);
+                if (showName && attendee.attendeeName) {
+                    topRowElements.push(`<span class="attendee-name">${safeAttendeeName}</span>`);
                 }
 
-                // Build bottom row (name and ticket type)
+                // Build bottom row (group, table, and ticket type)
                 const bottomRowElements = [];
-                if (showName && attendee.attendeeName) {
-                    bottomRowElements.push(`<span class="attendee-name">${safeAttendeeName}</span>`);
+                if (showGroup && attendee.groupName) {
+                    bottomRowElements.push(`<span class="attendee-group-name">${safeGroupName}</span>`);
+                }
+                if (showTable && attendee.tableNumber) {
+                    bottomRowElements.push(`<span>${bottomRowElements.length > 0 ? ' • ' : ''}Table ${safeTableNumber}</span>`);
                 }
                 if (showTicket && attendee.ticketType) {
                     bottomRowElements.push(`<span class="attendee-ticket">${safeTicketType}</span>`);
                 }
-
-                // Format email for safe display (uses EmailValidator.formatForDisplay which also escapes HTML)
-                const emailDisplay = attendee.email && window.EmailValidator ?
-                    window.EmailValidator.formatForDisplay(attendee.email) : '';
 
                 // Note: Using data attributes instead of onclick would be more secure
                 // but would require refactoring event handling
@@ -1748,7 +1884,6 @@
                         <div class="attendee-info">
                             ${topRowElements.length > 0 ? `<div class="attendee-top-row">${topRowElements.join('')}</div>` : ''}
                             ${bottomRowElements.length > 0 ? `<div class="attendee-bottom-row">${bottomRowElements.join('')}</div>` : ''}
-                            ${showEmail && emailDisplay ? `<div class="attendee-email">${emailDisplay}</div>` : ''}
                         </div>
                     <button class="check-button ${attendee.status === 'checked-in' ? 'checked-in' : 'check-in'} ${attendee.status === 'checked-in' ? 'undo' : ''}"
                             onclick="toggleAttendeeStatus('${safeId}')">
@@ -1770,7 +1905,104 @@
             }
 
             const newStatus = attendee.status === 'checked-in' ? 'pending' : 'checked-in';
+
+            // Show confirmation modal if checking in and the setting is enabled
+            const showConfirmation = window.EventCheckinConfig?.ui?.showCheckinConfirmation === true;
+            if (newStatus === 'checked-in' && showConfirmation) {
+                showCheckinConfirmation(attendee);
+            }
+
             updateAttendeeStatus(numericId, newStatus);
+        }
+
+        function showCheckinConfirmation(attendee) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'checkin-modal-overlay';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-labelledby', 'checkin-modal-title');
+
+            // Build detail rows
+            const details = [];
+            if (attendee.tableNumber) {
+                details.push(`
+                    <div class="checkin-modal-detail">
+                        <span class="checkin-modal-detail-label">Table:</span>
+                        <span>${escapeHtml(attendee.tableNumber)}</span>
+                    </div>
+                `);
+            }
+            if (attendee.groupName) {
+                details.push(`
+                    <div class="checkin-modal-detail">
+                        <span class="checkin-modal-detail-label">Group:</span>
+                        <span>${escapeHtml(attendee.groupName)}</span>
+                    </div>
+                `);
+            }
+            if (attendee.ticketType) {
+                details.push(`
+                    <div class="checkin-modal-detail">
+                        <span class="checkin-modal-detail-label">Ticket Type:</span>
+                        <span>${escapeHtml(attendee.ticketType)}</span>
+                    </div>
+                `);
+            }
+
+            modal.innerHTML = `
+                <div class="checkin-modal-content">
+                    <div class="checkin-modal-header">
+                        <div class="checkin-modal-icon">✅</div>
+                        <h2 id="checkin-modal-title" class="checkin-modal-title">Check-in Successful!</h2>
+                        <p class="checkin-modal-subtitle">Guest has been checked in</p>
+                    </div>
+
+                    <div class="checkin-modal-info">
+                        <div class="checkin-modal-name">${escapeHtml(attendee.attendeeName)}</div>
+                        ${details.join('')}
+                    </div>
+
+                    ${attendee.tableNumber ? `
+                        <div class="checkin-modal-reminder">
+                            <div class="checkin-modal-reminder-title">
+                                💡 Reminder
+                            </div>
+                            <p class="checkin-modal-reminder-text">
+                                Please inform the guest they are seated at <strong>Table ${escapeHtml(attendee.tableNumber)}</strong>
+                            </p>
+                        </div>
+                    ` : ''}
+
+                    <button class="checkin-modal-button" onclick="closeCheckinConfirmation()">
+                        Continue
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeCheckinConfirmation();
+                }
+            });
+
+            // Close on Escape key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeCheckinConfirmation();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        function closeCheckinConfirmation() {
+            const modal = document.querySelector('.checkin-modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         // File handling

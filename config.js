@@ -65,7 +65,8 @@ window.EventCheckinConfig = {
         },
         enableBulkActions: true,
         enableExport: true,
-        enableRealTime: true
+        enableRealTime: true,
+        showCheckinConfirmation: false
     },
     
     // Feature Flags
