@@ -61,7 +61,8 @@ window.EventCheckinConfig = {
             attendeeName: true,
             tableNumber: true,
             group: true,
-            ticketType: true
+            ticketType: true,
+            additionalInfo: true
         },
         enableBulkActions: true,
         enableExport: true,

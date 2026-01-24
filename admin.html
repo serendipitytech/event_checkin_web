@@ -793,6 +793,10 @@
                             <input type="checkbox" id="displayTicketType" checked>
                             <label for="displayTicketType">Show Ticket Type</label>
                         </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="displayAdditionalInfo" checked>
+                            <label for="displayAdditionalInfo">Show Additional Info (e.g., Meal Choice)</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1730,6 +1734,7 @@
             safeSetChecked('displayTableNumber', displayOptions.tableNumber !== false);
             safeSetChecked('displayGroup', displayOptions.group !== false);
             safeSetChecked('displayTicketType', displayOptions.ticketType !== false);
+            safeSetChecked('displayAdditionalInfo', displayOptions.additionalInfo !== false);
 
             // System settings
             safeSetValue('autoRefresh', config.defaults?.autoRefresh || 5000);
@@ -2395,7 +2400,8 @@
                         attendeeName: document.getElementById('displayAttendeeName').checked,
                         tableNumber: document.getElementById('displayTableNumber').checked,
                         group: document.getElementById('displayGroup').checked,
-                        ticketType: document.getElementById('displayTicketType').checked
+                        ticketType: document.getElementById('displayTicketType').checked,
+                        additionalInfo: document.getElementById('displayAdditionalInfo').checked
                     }
                 },
                 defaults: {

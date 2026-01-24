@@ -241,14 +241,16 @@
         }
 
         .attendee-ticket {
-            font-size: 12px;
-            color: #000000;
-            padding: 4px 10px;
-            background: rgba(0, 0, 0, 0.06);
-            border-radius: 999px;
-            font-weight: 600;
-            margin-top: 2px;
-            white-space: nowrap;
+            color: #4e4e4e;
+        }
+
+        .attendee-additional-info {
+            font-size: 13px;
+            color: #4e4e4e;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .attendee-email {
@@ -1849,6 +1851,7 @@
             const showTable = displayOptions.tableNumber !== false;
             const showGroup = displayOptions.group !== false;
             const showTicket = displayOptions.ticketType !== false;
+            const showAdditionalInfo = displayOptions.additionalInfo !== false;
             const showEmail = displayOptions.email !== false;
 
             container.innerHTML = filteredAttendees.map(attendee => {
@@ -1871,11 +1874,21 @@
                     bottomRowElements.push(`<span class="attendee-group-name">${safeGroupName}</span>`);
                 }
                 if (showTable && attendee.tableNumber) {
-                    bottomRowElements.push(`<span>${bottomRowElements.length > 0 ? ' • ' : ''}Table ${safeTableNumber}</span>`);
+                    bottomRowElements.push(`Table ${safeTableNumber}`);
                 }
                 if (showTicket && attendee.ticketType) {
                     bottomRowElements.push(`<span class="attendee-ticket">${safeTicketType}</span>`);
                 }
+
+                // Format bottom row with separators
+                const bottomRow = bottomRowElements.map((el, idx) =>
+                    idx > 0 ? ` • ${el}` : el
+                ).join('');
+
+                // Additional info row (e.g., meal choice)
+                const safeAdditionalInfo = escapeHtml(attendee.additionalInfo || attendee.mealChoice);
+                const additionalInfoRow = (showAdditionalInfo && safeAdditionalInfo) ?
+                    `<div class="attendee-additional-info">🍽️ ${safeAdditionalInfo}</div>` : '';
 
                 // Note: Using data attributes instead of onclick would be more secure
                 // but would require refactoring event handling
@@ -1883,7 +1896,8 @@
                 <div class="attendee-item ${attendee.status === 'checked-in' ? 'checked-in' : ''}">
                         <div class="attendee-info">
                             ${topRowElements.length > 0 ? `<div class="attendee-top-row">${topRowElements.join('')}</div>` : ''}
-                            ${bottomRowElements.length > 0 ? `<div class="attendee-bottom-row">${bottomRowElements.join('')}</div>` : ''}
+                            ${bottomRow ? `<div class="attendee-bottom-row">${bottomRow}</div>` : ''}
+                            ${additionalInfoRow}
                         </div>
                     <button class="check-button ${attendee.status === 'checked-in' ? 'checked-in' : 'check-in'} ${attendee.status === 'checked-in' ? 'undo' : ''}"
                             onclick="toggleAttendeeStatus('${safeId}')">
@@ -1949,6 +1963,16 @@
                 `);
             }
 
+            const additionalInfo = attendee.additionalInfo || attendee.mealChoice;
+            if (additionalInfo) {
+                details.push(`
+                    <div class="checkin-modal-detail">
+                        <span class="checkin-modal-detail-label">Meal Choice:</span>
+                        <span>${escapeHtml(additionalInfo)}</span>
+                    </div>
+                `);
+            }
+
             modal.innerHTML = `
                 <div class="checkin-modal-content">
                     <div class="checkin-modal-header">
@@ -1962,13 +1986,15 @@
                         ${details.join('')}
                     </div>
 
-                    ${attendee.tableNumber ? `
+                    ${attendee.tableNumber || additionalInfo ? `
                         <div class="checkin-modal-reminder">
                             <div class="checkin-modal-reminder-title">
                                 💡 Reminder
                             </div>
                             <p class="checkin-modal-reminder-text">
-                                Please inform the guest they are seated at <strong>Table ${escapeHtml(attendee.tableNumber)}</strong>
+                                ${attendee.tableNumber ? `Please inform the guest they are seated at <strong>Table ${escapeHtml(attendee.tableNumber)}</strong>` : ''}
+                                ${attendee.tableNumber && additionalInfo ? '<br>' : ''}
+                                ${additionalInfo ? `Their meal choice: <strong>${escapeHtml(additionalInfo)}</strong>` : ''}
                             </p>
                         </div>
                     ` : ''}
