@@ -1,0 +1,25 @@
+{
+  "name": "event-checkin-web",
+  "version": "2.0.0",
+  "description": "Event Check-in System - HTML Web Application",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "serve": "python3 -m http.server 8000",
+    "start": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "event",
+    "check-in",
+    "attendee-management",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
