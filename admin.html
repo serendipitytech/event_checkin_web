@@ -1906,19 +1906,50 @@
         
         async function loadSystemStatus() {
             const statusDiv = document.getElementById('systemStatus');
+            const config = window.EventCheckinConfig || {};
+            const dataSourceType = config.dataSource?.type || 'csv';
+
             try {
-                // Check if CSV handler is accessible
-                const response = await fetch('csv-handler.php?action=status');
-                if (response.ok) {
-                    const status = await response.json();
+                if (dataSourceType === 'supabase') {
+                    // Check Supabase connection
+                    const settings = config.dataSource?.settings?.supabase;
+                    if (!settings || !settings.url || !settings.anonKey) {
+                        throw new Error('Supabase not configured');
+                    }
+
+                    const supabase = window.supabase.createClient(settings.url, settings.anonKey);
+                    const { data, error } = await supabase
+                        .from(settings.tableName || 'event_checkin_attendees')
+                        .select('count', { count: 'exact', head: true });
+
+                    if (error) throw error;
+
                     statusDiv.innerHTML = `
                         <div class="status-indicator status-success">✅ System Online</div>
                         <p style="margin-top: 0.5rem; color: var(--gray-600);">
-                            CSV handler is working correctly
+                            Supabase connection active
                         </p>
                     `;
+                } else if (dataSourceType === 'csv') {
+                    // Check if CSV handler is accessible
+                    const response = await fetch('csv-handler.php?action=status');
+                    if (response.ok) {
+                        statusDiv.innerHTML = `
+                            <div class="status-indicator status-success">✅ System Online</div>
+                            <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                                CSV handler is working correctly
+                            </p>
+                        `;
+                    } else {
+                        throw new Error('CSV handler not accessible');
+                    }
                 } else {
-                    throw new Error('CSV handler not accessible');
+                    statusDiv.innerHTML = `
+                        <div class="status-indicator status-success">✅ System Online</div>
+                        <p style="margin-top: 0.5rem; color: var(--gray-600);">
+                            ${dataSourceType} data source configured
+                        </p>
+                    `;
                 }
             } catch (error) {
                 statusDiv.innerHTML = `
@@ -1973,51 +2004,84 @@
         
         async function loadAttendeeStats() {
             const statsDiv = document.getElementById('attendeeStats');
+            const config = window.EventCheckinConfig || {};
+            const dataSourceType = config.dataSource?.type || 'csv';
+
             try {
-                // Fetch both attendee data and check-in status
-                const [dataResponse, checkinResponse] = await Promise.all([
-                    fetch('csv-handler.php?action=get'),
-                    fetch('csv-handler.php?action=getcheckins')
-                ]);
-                
-                if (dataResponse.ok) {
-                    const data = await dataResponse.json();
-                    const total = data.length;
-                    
-                    // Load check-in status if available
-                    let checkedIn = 0;
-                    if (checkinResponse.ok) {
-                        const checkinData = await checkinResponse.json();
-                        checkedIn = Object.values(checkinData).filter(c => c.status === 'checked-in').length;
-                    } else {
-                        // Fallback: count checked-in status in data
-                        checkedIn = data.filter(a => a.status === 'checked-in').length;
+                let total = 0;
+                let checkedIn = 0;
+
+                if (dataSourceType === 'supabase') {
+                    // Query Supabase for attendee stats
+                    const settings = config.dataSource?.settings?.supabase;
+                    if (!settings || !settings.url || !settings.anonKey) {
+                        throw new Error('Supabase not configured');
                     }
-                    
-                    const pending = total - checkedIn;
-                    
-                    statsDiv.innerHTML = `
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
-                            <div>
-                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900);">${total}</div>
-                                <div style="font-size: 0.75rem; color: var(--gray-500);">Total</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">${checkedIn}</div>
-                                <div style="font-size: 0.75rem; color: var(--gray-500);">Checked In</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color);">${pending}</div>
-                                <div style="font-size: 0.75rem; color: var(--gray-500);">Pending</div>
-                            </div>
-                        </div>
-                        <p style="margin-top: 1rem; text-align: center; font-size: 0.75rem; color: var(--gray-500);">
-                            Last updated: ${new Date().toLocaleTimeString()}
-                        </p>
-                    `;
-                } else {
-                    throw new Error('Unable to load attendee data');
+
+                    const supabase = window.supabase.createClient(settings.url, settings.anonKey);
+
+                    // Get total count
+                    const { count: totalCount, error: totalError } = await supabase
+                        .from(settings.tableName || 'event_checkin_attendees')
+                        .select('*', { count: 'exact', head: true });
+
+                    if (totalError) throw totalError;
+                    total = totalCount || 0;
+
+                    // Get checked-in count
+                    const { count: checkedInCount, error: checkedInError } = await supabase
+                        .from(settings.tableName || 'event_checkin_attendees')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'checked-in');
+
+                    if (checkedInError) throw checkedInError;
+                    checkedIn = checkedInCount || 0;
+
+                } else if (dataSourceType === 'csv') {
+                    // Fetch both attendee data and check-in status
+                    const [dataResponse, checkinResponse] = await Promise.all([
+                        fetch('csv-handler.php?action=get'),
+                        fetch('csv-handler.php?action=getcheckins')
+                    ]);
+
+                    if (dataResponse.ok) {
+                        const data = await dataResponse.json();
+                        total = data.length;
+
+                        // Load check-in status if available
+                        if (checkinResponse.ok) {
+                            const checkinData = await checkinResponse.json();
+                            checkedIn = Object.values(checkinData).filter(c => c.status === 'checked-in').length;
+                        } else {
+                            // Fallback: count checked-in status in data
+                            checkedIn = data.filter(a => a.status === 'checked-in').length;
+                        }
+                    } else {
+                        throw new Error('Unable to load attendee data');
+                    }
                 }
+
+                const pending = total - checkedIn;
+
+                statsDiv.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900);">${total}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">Total</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">${checkedIn}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">Checked In</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color);">${pending}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">Pending</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem; text-align: center; font-size: 0.75rem; color: var(--gray-500);">
+                        Last updated: ${new Date().toLocaleTimeString()}
+                    </p>
+                `;
             } catch (error) {
                 statsDiv.innerHTML = `
                     <div class="status-indicator status-error">❌ Error</div>
@@ -2401,29 +2465,58 @@
                 });
         }
         
-        function resetCheckins() {
-            if (confirm('Reset all check-ins? This will mark every attendee as pending.')) {
-                // Clear server-side check-in data
-                fetch('csv-handler.php?action=clearcheckins', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Admin-Token': 'admin123'
+        async function resetCheckins() {
+            if (!confirm('Reset all check-ins? This will mark every attendee as pending.')) {
+                return;
+            }
+
+            const config = window.EventCheckinConfig || {};
+            const dataSourceType = config.dataSource?.type || 'csv';
+
+            try {
+                if (dataSourceType === 'supabase') {
+                    // Call Supabase function to reset check-ins
+                    const settings = config.dataSource?.settings?.supabase;
+                    if (!settings || !settings.url || !settings.anonKey) {
+                        throw new Error('Supabase not configured');
                     }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        // Reload attendee stats without refreshing the page
-                        loadAttendeeStats();
-                        alert('✅ All check-ins have been reset! All devices will update within 5 seconds.');
-                    } else {
+
+                    const supabase = window.supabase.createClient(settings.url, settings.anonKey);
+
+                    // Call the reset_all_event_checkins function
+                    const { data, error } = await supabase.rpc('reset_all_event_checkins', {
+                        p_event_id: null  // null means reset all events
+                    });
+
+                    if (error) throw error;
+
+                    console.log(`Reset ${data?.[0]?.reset_count || 0} check-ins`);
+
+                    // Reload attendee stats
+                    loadAttendeeStats();
+                    alert('✅ All check-ins have been reset! Changes will sync immediately.');
+
+                } else if (dataSourceType === 'csv') {
+                    // Clear server-side check-in data for CSV
+                    const response = await fetch('csv-handler.php?action=clearcheckins', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Admin-Token': 'admin123'
+                        }
+                    });
+
+                    if (!response.ok) {
                         throw new Error('Failed to reset check-ins');
                     }
-                })
-                .catch(error => {
-                    console.error('Error resetting check-ins:', error);
-                    alert('❌ Error resetting check-ins: ' + error.message);
-                });
+
+                    // Reload attendee stats
+                    loadAttendeeStats();
+                    alert('✅ All check-ins have been reset! All devices will update within 5 seconds.');
+                }
+            } catch (error) {
+                console.error('Error resetting check-ins:', error);
+                alert('❌ Error resetting check-ins: ' + error.message);
             }
         }
         
