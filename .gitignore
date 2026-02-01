@@ -23,3 +23,11 @@ desktop.ini
 *.temp
 *.bak
 *.backup
+
+# Markdown files (AI development docs, roadmaps, testing docs)
+*.md
+!README.md
+!readme.md
+
+# AI development files
+.claude/
