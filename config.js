@@ -38,8 +38,8 @@ window.EventCheckinConfig = {
             },
             // Supabase settings
             supabase: {
-                url: "https://mwgusnjwqkznzohmxugu.supabase.co",
-                anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z3Vzbmp3cWt6bnpvaG14dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODI5NTAsImV4cCI6MjA4NDc1ODk1MH0.QUYuqMLcBEmWabyi_RnZdZo4yfqkR_9k_4HCbHJyxj8",
+                url: "https://efcgzxjwystresjbcezc.supabase.co",
+                anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmY2d6eGp3eXN0cmVzamJjZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MTgwNTYsImV4cCI6MjA3NDk5NDA1Nn0.TGu5A16PWM3ceIVMURQO68fChj80gmkAxPYUTyMsaMs",
                 tableName: "event_checkin_attendees"
             }
         }
@@ -47,8 +47,8 @@ window.EventCheckinConfig = {
     
     // Database Configuration (legacy support)
     database: {
-        url: "https://mwgusnjwqkznzohmxugu.supabase.co",
-        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z3Vzbmp3cWt6bnpvaG14dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODI5NTAsImV4cCI6MjA4NDc1ODk1MH0.QUYuqMLcBEmWabyi_RnZdZo4yfqkR_9k_4HCbHJyxj8",
+        url: "https://efcgzxjwystresjbcezc.supabase.co",
+        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmY2d6eGp3eXN0cmVzamJjZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MTgwNTYsImV4cCI6MjA3NDk5NDA1Nn0.TGu5A16PWM3ceIVMURQO68fChj80gmkAxPYUTyMsaMs",
         tableName: "event_checkin_attendees"
     },
     
